@@ -1,4 +1,4 @@
- muk muk gitservices:
+services:
   db:
     image: postgres:18
     user: root
