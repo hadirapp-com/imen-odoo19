@@ -1,0 +1,68 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "screenshots/**"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-odoo19
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Deploy: push/merge ke main. Self-hosted runner di host.
+  # ---------------------------------------------------------------------------
+  deploy:
+    runs-on: [self-hosted, Linux, X64, DESKTOP-75HK4JS]
+    env:
+      DEPLOY_DIR: /home/abdmun8/code/hadirapp/odoo-19
+      ODOO_URL: http://localhost:10019
+    steps:
+      - name: Pull kode
+        run: |
+          cd "$DEPLOY_DIR"
+          git pull --ff-only origin main
+
+      - name: Restart Odoo
+        run: |
+          cd "$DEPLOY_DIR"
+          docker compose up -d
+          # Restart supaya perubahan odoo.conf & kode Python addons terbaca.
+          docker compose restart odoo19
+          docker compose ps
+
+      - name: Health check
+        run: |
+          # Retry maks ~120 dtk (entrypoint jalankan pip install dulu).
+          for i in $(seq 1 12); do
+            if curl -fsS -o /dev/null "$ODOO_URL/web/health"; then
+              echo "Odoo sehat"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Odoo tidak sehat setelah deploy" >&2
+          docker compose -f "$DEPLOY_DIR/docker-compose.yml" logs --tail=100 odoo19
+          exit 1
+
+      - name: Update Apps List
+        run: |
+          cd "$DEPLOY_DIR"
+          # Daftarkan addon baru di semua database (tidak install/upgrade modul).
+          # Kredensial DB diambil dari env kontainer (HOST/USER/PASSWORD).
+          docker compose exec -T odoo19 bash -c '
+            set -e
+            for db in $(PGPASSWORD="$PASSWORD" psql -h "$HOST" -U "$USER" -d postgres -Atc \
+                "select datname from pg_database where not datistemplate and datname <> '"'"'postgres'"'"'"); do
+              echo "== $db"
+              echo "env[\"ir.module.module\"].update_list(); env.cr.commit()" | \
+                odoo shell -c /etc/odoo/odoo.conf -d "$db" \
+                  --db_host "$HOST" --db_user "$USER" --db_password "$PASSWORD" \
+                  --no-http --logfile= --log-level=warn
+            done
+          '
+          echo "Deployment done!"
