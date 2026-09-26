@@ -7,3 +7,4 @@
 # -----------------------
 # paramiko==2.7.2 # for auto_backup module
 qifparse==0.5 # for base_accounting_kit module (import .qif bank statements)
+pandas # for ohrms_core and hrms_dashboard modules
