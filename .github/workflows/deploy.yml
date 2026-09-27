@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, Linux, X64, DESKTOP-75HK4JS]
+    runs-on: [self-hosted]
     env:
       DEPLOY_DIR: /home/abdmun8/code/hadirapp/odoo-19
     steps:
