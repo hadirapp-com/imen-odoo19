@@ -40,6 +40,9 @@ class Odoo:
         self.headers = {
             "Content-Type": "application/json",
             "Authorization": f"bearer {api_key}",
+            # Cloudflare in front of erp.imen.co.id rejects urllib's default
+            # "Python-urllib/x.y" user agent with error 1010.
+            "User-Agent": "imen-assessment-import/1.0",
         }
         if db:
             self.headers["X-Odoo-Database"] = db
