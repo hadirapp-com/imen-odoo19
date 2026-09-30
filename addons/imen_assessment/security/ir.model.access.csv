@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_submission_user,imen.assessment.submission user,model_imen_assessment_submission,base.group_user,1,0,0,0
+access_answer_user,imen.assessment.answer user,model_imen_assessment_answer,base.group_user,1,0,0,0
+access_score_user,imen.assessment.score user,model_imen_assessment_score,base.group_user,1,0,0,0
+access_submission_admin,imen.assessment.submission admin,model_imen_assessment_submission,base.group_system,1,1,1,1
+access_answer_admin,imen.assessment.answer admin,model_imen_assessment_answer,base.group_system,1,1,1,1
+access_score_admin,imen.assessment.score admin,model_imen_assessment_score,base.group_system,1,1,1,1

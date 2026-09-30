@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Submission -->
+    <record id="view_submission_list" model="ir.ui.view">
+        <field name="name">imen.assessment.submission.list</field>
+        <field name="model">imen.assessment.submission</field>
+        <field name="arch" type="xml">
+            <list create="0">
+                <field name="submitted_at"/>
+                <field name="assessment" widget="badge"
+                       decoration-info="assessment == 'ibp'" decoration-success="assessment == 'imp'"/>
+                <field name="name"/>
+                <field name="contact" optional="show"/>
+                <field name="area" optional="show"/>
+                <field name="profession" optional="show"/>
+                <field name="org" optional="hide"/>
+                <field name="primary_dna"/>
+                <field name="secondary_dna"/>
+                <field name="fit_score" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_submission_form" model="ir.ui.view">
+        <field name="name">imen.assessment.submission.form</field>
+        <field name="model">imen.assessment.submission</field>
+        <field name="arch" type="xml">
+            <form create="0">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Respondent">
+                            <field name="contact"/>
+                            <field name="area"/>
+                            <field name="profession"/>
+                            <field name="org"/>
+                        </group>
+                        <group string="Result">
+                            <field name="assessment"/>
+                            <field name="primary_dna"/>
+                            <field name="secondary_dna"/>
+                            <field name="fit_score" invisible="assessment != 'imp'"/>
+                            <field name="submitted_at"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="DNA Scores" name="scores">
+                            <field name="score_ids">
+                                <list>
+                                    <field name="dna"/>
+                                    <field name="percent" widget="progressbar"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Answers" name="answers">
+                            <field name="answer_ids">
+                                <list>
+                                    <field name="sequence" string="#"/>
+                                    <field name="question_id"/>
+                                    <field name="dna"/>
+                                    <field name="choice_text"/>
+                                    <field name="score"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Technical" name="technical" groups="base.group_no_one">
+                            <group>
+                                <field name="user_agent"/>
+                                <field name="legacy_id"/>
+                                <field name="scores"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_submission_search" model="ir.ui.view">
+        <field name="name">imen.assessment.submission.search</field>
+        <field name="model">imen.assessment.submission</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="contact"/>
+                <field name="area"/>
+                <field name="profession"/>
+                <field name="org"/>
+                <field name="primary_dna"/>
+                <filter name="ibp" string="IBP" domain="[('assessment', '=', 'ibp')]"/>
+                <filter name="imp" string="IMP" domain="[('assessment', '=', 'imp')]"/>
+                <separator/>
+                <filter name="submitted_at" string="Submitted" date="submitted_at"/>
+                <filter name="group_assessment" string="Assessment" context="{'group_by': 'assessment'}"/>
+                <filter name="group_primary_dna" string="Primary DNA" context="{'group_by': 'primary_dna'}"/>
+                <filter name="group_secondary_dna" string="Secondary DNA" context="{'group_by': 'secondary_dna'}"/>
+                <filter name="group_area" string="Area" context="{'group_by': 'area'}"/>
+                <filter name="group_profession" string="Profession" context="{'group_by': 'profession'}"/>
+                <filter name="group_submitted_at" string="Submitted Date" context="{'group_by': 'submitted_at:day'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_submission_pivot" model="ir.ui.view">
+        <field name="name">imen.assessment.submission.pivot</field>
+        <field name="model">imen.assessment.submission</field>
+        <field name="arch" type="xml">
+            <pivot string="Primary DNA">
+                <field name="primary_dna" type="row"/>
+                <field name="assessment" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_submission_graph" model="ir.ui.view">
+        <field name="name">imen.assessment.submission.graph</field>
+        <field name="model">imen.assessment.submission</field>
+        <field name="arch" type="xml">
+            <graph string="Primary DNA" type="bar">
+                <field name="primary_dna"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_submission" model="ir.actions.act_window">
+        <field name="name">Submissions</field>
+        <field name="res_model">imen.assessment.submission</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No assessment submissions yet</p>
+            <p>Submissions arrive automatically when someone finishes the assessment on the IMEN landing page.</p>
+        </field>
+    </record>
+
+    <record id="action_submission_analysis" model="ir.actions.act_window">
+        <field name="name">Primary DNA</field>
+        <field name="res_model">imen.assessment.submission</field>
+        <field name="view_mode">graph,pivot,list,form</field>
+    </record>
+
+    <!-- Score analysis -->
+    <record id="view_score_list" model="ir.ui.view">
+        <field name="name">imen.assessment.score.list</field>
+        <field name="model">imen.assessment.score</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0">
+                <field name="submitted_at"/>
+                <field name="submission_id"/>
+                <field name="assessment"/>
+                <field name="dna"/>
+                <field name="percent"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_score_search" model="ir.ui.view">
+        <field name="name">imen.assessment.score.search</field>
+        <field name="model">imen.assessment.score</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="submission_id"/>
+                <field name="dna"/>
+                <field name="area"/>
+                <filter name="ibp" string="IBP" domain="[('assessment', '=', 'ibp')]"/>
+                <filter name="imp" string="IMP" domain="[('assessment', '=', 'imp')]"/>
+                <separator/>
+                <filter name="submitted_at" string="Submitted" date="submitted_at"/>
+                <filter name="group_dna" string="DNA" context="{'group_by': 'dna'}"/>
+                <filter name="group_area" string="Area" context="{'group_by': 'area'}"/>
+                <filter name="group_profession" string="Profession" context="{'group_by': 'profession'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_score_pivot" model="ir.ui.view">
+        <field name="name">imen.assessment.score.pivot</field>
+        <field name="model">imen.assessment.score</field>
+        <field name="arch" type="xml">
+            <pivot string="Average DNA Score">
+                <field name="dna" type="row"/>
+                <field name="assessment" type="col"/>
+                <field name="percent" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_score_graph" model="ir.ui.view">
+        <field name="name">imen.assessment.score.graph</field>
+        <field name="model">imen.assessment.score</field>
+        <field name="arch" type="xml">
+            <graph string="Average DNA Score" type="bar">
+                <field name="dna"/>
+                <field name="percent" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_score_analysis" model="ir.actions.act_window">
+        <field name="name">DNA Scores</field>
+        <field name="res_model">imen.assessment.score</field>
+        <field name="view_mode">graph,pivot,list</field>
+    </record>
+</odoo>

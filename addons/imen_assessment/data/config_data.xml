@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Comma-separated origins allowed to POST /imen/assessment/submissions
+         (same role as ALLOWED_ORIGINS in assessment-collector). Editable in
+         Settings > Technical > System Parameters. -->
+    <record id="param_allowed_origins" model="ir.config_parameter">
+        <field name="key">imen_assessment.allowed_origins</field>
+        <field name="value">https://www.imen.co.id,https://imen.co.id</field>
+    </record>
+</odoo>
