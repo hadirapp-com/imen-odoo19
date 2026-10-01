@@ -98,5 +98,80 @@
         <!-- Generate the document checklist from the package template -->
         <function model="umrah.booking" name="action_generate_checklist" eval="[[ref('demo_booking')]]"/>
 
+        <!-- Operational tasks from the task catalog (auto-creates the project) -->
+        <function model="umrah.booking" name="action_generate_tasks" eval="[[ref('demo_booking')]]"/>
+
+        <!-- Visas: two approved, one pending -->
+        <record id="demo_visa_1" model="umrah.visa">
+            <field name="booking_id" ref="demo_booking"/>
+            <field name="pilgrim_id" ref="demo_pilgrim_1"/>
+            <field name="passport_number">X1234567</field>
+            <field name="visa_number">VZ-2026-000101</field>
+            <field name="application_date">2026-11-02</field>
+            <field name="submission_date">2026-11-05</field>
+            <field name="approval_date">2026-11-20</field>
+            <field name="expiry_date">2027-02-15</field>
+            <field name="state">approved</field>
+        </record>
+        <record id="demo_visa_2" model="umrah.visa">
+            <field name="booking_id" ref="demo_booking"/>
+            <field name="pilgrim_id" ref="demo_pilgrim_2"/>
+            <field name="passport_number">X2233445</field>
+            <field name="visa_number">VZ-2026-000102</field>
+            <field name="application_date">2026-11-02</field>
+            <field name="submission_date">2026-11-05</field>
+            <field name="approval_date">2026-11-21</field>
+            <field name="expiry_date">2027-02-15</field>
+            <field name="state">approved</field>
+        </record>
+        <record id="demo_visa_3" model="umrah.visa">
+            <field name="booking_id" ref="demo_booking"/>
+            <field name="pilgrim_id" ref="demo_pilgrim_3"/>
+            <field name="passport_number">X9988776</field>
+            <field name="application_date">2026-11-02</field>
+            <field name="state">processing</field>
+        </record>
+
+        <!-- Manasik session with attendance -->
+        <record id="demo_manasik" model="umrah.manasik">
+            <field name="name">Manasik - UMR/2027/00001</field>
+            <field name="booking_id" ref="demo_booking"/>
+            <field name="date">2027-01-08</field>
+            <field name="start_time">9.0</field>
+            <field name="end_time">11.5</field>
+            <field name="location">Aula HadirApp, Jakarta</field>
+        </record>
+        <function model="umrah.manasik" name="action_fill_attendees" eval="[[ref('demo_manasik')]]"/>
+
+        <!-- Flights shown on the portal -->
+        <record id="demo_flight_outbound" model="umrah.flight">
+            <field name="booking_id" ref="demo_booking"/>
+            <field name="flight_type">outbound</field>
+            <field name="airline">Garuda Indonesia</field>
+            <field name="flight_number">GA-680</field>
+            <field name="departure_city">Jakarta</field>
+            <field name="departure_airport">Soekarno-Hatta (CGK)</field>
+            <field name="departure_datetime">2027-01-15 04:30:00</field>
+            <field name="arrival_city">Jeddah</field>
+            <field name="arrival_airport">King Abdulaziz (JED)</field>
+            <field name="arrival_datetime">2027-01-15 09:10:00</field>
+        </record>
+        <record id="demo_flight_return" model="umrah.flight">
+            <field name="booking_id" ref="demo_booking"/>
+            <field name="flight_type">return</field>
+            <field name="airline">Garuda Indonesia</field>
+            <field name="flight_number">GA-681</field>
+            <field name="departure_city">Jeddah</field>
+            <field name="departure_airport">King Abdulaziz (JED)</field>
+            <field name="departure_datetime">2027-01-24 11:00:00</field>
+            <field name="arrival_city">Jakarta</field>
+            <field name="arrival_airport">Soekarno-Hatta (CGK)</field>
+            <field name="arrival_datetime">2027-01-25 00:30:00</field>
+        </record>
+
+        <record id="demo_booking" model="umrah.booking">
+            <field name="meeting_point">Bandara Soekarno-Hatta, Terminal 3, Counter HadirApp - pukul 01:30 WIB</field>
+        </record>
+
     </data>
 </odoo>

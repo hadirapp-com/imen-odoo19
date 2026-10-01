@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- List -->
+        <record id="view_umrah_flight_list" model="ir.ui.view">
+            <field name="name">umrah.flight.list</field>
+            <field name="model">umrah.flight</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="sequence" widget="handle"/>
+                    <field name="flight_type"/>
+                    <field name="airline"/>
+                    <field name="flight_number"/>
+                    <field name="departure_airport"/>
+                    <field name="departure_datetime"/>
+                    <field name="arrival_airport" optional="show"/>
+                    <field name="arrival_datetime" optional="show"/>
+                    <field name="booking_id"/>
+                    <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Form -->
+        <record id="view_umrah_flight_form" model="ir.ui.view">
+            <field name="name">umrah.flight.form</field>
+            <field name="model">umrah.flight</field>
+            <field name="arch" type="xml">
+                <form string="Flight">
+                    <sheet>
+                        <group>
+                            <group name="main">
+                                <field name="booking_id"/>
+                                <field name="flight_type"/>
+                                <field name="airline"/>
+                                <field name="flight_number"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                            <group name="outbound">
+                                <separator string="Departure" colspan="2"/>
+                                <field name="departure_city"/>
+                                <field name="departure_airport"/>
+                                <field name="departure_datetime"/>
+                            </group>
+                            <group name="inbound">
+                                <separator string="Arrival" colspan="2"/>
+                                <field name="arrival_city"/>
+                                <field name="arrival_airport"/>
+                                <field name="arrival_datetime"/>
+                            </group>
+                        </group>
+                        <group string="Notes">
+                            <field name="notes" nolabel="1" colspan="2"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Search -->
+        <record id="view_umrah_flight_search" model="ir.ui.view">
+            <field name="name">umrah.flight.search</field>
+            <field name="model">umrah.flight</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="airline"/>
+                    <field name="flight_number"/>
+                    <field name="booking_id"/>
+                    <filter name="outbound" string="Outbound" domain="[('flight_type', '=', 'outbound')]"/>
+                    <filter name="return" string="Return" domain="[('flight_type', '=', 'return')]"/>
+                    <group>
+                        <filter name="group_booking" string="Booking" context="{'group_by': 'booking_id'}"/>
+                        <filter name="group_departure_day" string="Departure Day"
+                                context="{'group_by': 'departure_datetime:day'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Actions -->
+        <record id="action_umrah_flight" model="ir.actions.act_window">
+            <field name="name">Flights</field>
+            <field name="res_model">umrah.flight</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="view_umrah_flight_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No flights yet
+                </p>
+                <p>
+                    Record the outbound and return flights of each booking. Pilgrims
+                    see them on the portal departure information.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

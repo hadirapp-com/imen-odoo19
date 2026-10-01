@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Task type: list -->
+        <record id="view_umrah_task_type_list" model="ir.ui.view">
+            <field name="name">umrah.task.type.list</field>
+            <field name="model">umrah.task.type</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="sequence" widget="handle"/>
+                    <field name="name"/>
+                    <field name="anchor"/>
+                    <field name="deadline_offset"/>
+                    <field name="responsible_user_id" widget="many2one_avatar_user" optional="show"/>
+                    <field name="required" widget="boolean_toggle" optional="show"/>
+                    <field name="active" widget="boolean_toggle" optional="hide"/>
+                    <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Task type: form -->
+        <record id="view_umrah_task_type_form" model="ir.ui.view">
+            <field name="name">umrah.task.type.form</field>
+            <field name="model">umrah.task.type</field>
+            <field name="arch" type="xml">
+                <form string="Task Type">
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg="bg-danger" invisible="active"/>
+                        <div class="oe_title">
+                            <label for="name"/>
+                            <h1><field name="name" placeholder="e.g. Visa Processing"/></h1>
+                        </div>
+                        <group>
+                            <group name="main">
+                                <field name="active" invisible="1"/>
+                                <field name="anchor"/>
+                                <field name="deadline_offset"/>
+                                <field name="required"/>
+                            </group>
+                            <group name="defaults">
+                                <field name="responsible_user_id" widget="many2one_avatar_user"/>
+                                <field name="sequence"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                        </group>
+                        <group string="Description">
+                            <field name="description" nolabel="1" colspan="2"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Extend project.task with Umrah fields -->
+        <record id="view_task_form_inherit_umrah" model="ir.ui.view">
+            <field name="name">project.task.form.inherit.umrah</field>
+            <field name="model">project.task</field>
+            <field name="inherit_id" ref="project.view_task_form2"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page name="umrah" string="Umrah" invisible="not umrah_booking_id">
+                        <group>
+                            <group name="umrah_main">
+                                <field name="umrah_booking_id" readonly="task_type_id"/>
+                                <field name="task_type_id"/>
+                                <field name="pilgrim_id"
+                                       domain="[('booking_id', '=', umrah_booking_id)]"/>
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Actions -->
+        <record id="action_umrah_task_type" model="ir.actions.act_window">
+            <field name="name">Task Template</field>
+            <field name="res_model">umrah.task.type</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No task types yet
+                </p>
+                <p>
+                    Task types are the operational checklist applied to every booking.
+                    Deadlines are computed from the departure date (H-offset) or the
+                    return date.
+                </p>
+            </field>
+        </record>
+
+        <record id="action_umrah_task" model="ir.actions.act_window">
+            <field name="name">Operational Tasks</field>
+            <field name="res_model">project.task</field>
+            <field name="view_mode">list,form,kanban</field>
+            <field name="domain">[('umrah_booking_id', '!=', False)]</field>
+            <field name="context">{'group_by': 'umrah_booking_id'}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No operational tasks yet
+                </p>
+                <p>
+                    Tasks are generated automatically from the task template when a
+                    booking is confirmed, with deadlines based on the departure date.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

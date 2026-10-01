@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- List -->
+        <record id="view_umrah_manasik_list" model="ir.ui.view">
+            <field name="name">umrah.manasik.list</field>
+            <field name="model">umrah.manasik</field>
+            <field name="arch" type="xml">
+                <list decoration-info="date &gt;= context_today and not present_count"
+                      decoration-success="present_count &gt; 0">
+                    <field name="name"/>
+                    <field name="booking_id"/>
+                    <field name="date"/>
+                    <field name="start_time" widget="float_time"/>
+                    <field name="end_time" widget="float_time"/>
+                    <field name="location" optional="show"/>
+                    <field name="trainer_id" optional="show"/>
+                    <field name="present_count" string="Present"/>
+                    <field name="attendee_count" string="Attendees"/>
+                    <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Form -->
+        <record id="view_umrah_manasik_form" model="ir.ui.view">
+            <field name="name">umrah.manasik.form</field>
+            <field name="model">umrah.manasik</field>
+            <field name="arch" type="xml">
+                <form string="Manasik Session">
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_schedule_calendar" type="object" class="oe_stat_button"
+                                    icon="fa-calendar" invisible="calendar_event_id">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Schedule to Calendar</span>
+                                </div>
+                            </button>
+                            <button name="action_open_calendar_event" type="object" class="oe_stat_button"
+                                    icon="fa-calendar" invisible="not calendar_event_id">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Calendar Event</span>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="name" placeholder="Session name..."/></h1>
+                        </div>
+                        <group>
+                            <group name="main">
+                                <field name="booking_id"/>
+                                <field name="trainer_id"/>
+                                <field name="location" placeholder="Hall / mosque address..."/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                            <group name="schedule">
+                                <field name="date"/>
+                                <field name="start_time" widget="float_time"/>
+                                <field name="end_time" widget="float_time"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="attendance" string="Attendance">
+                                <button name="action_fill_attendees" type="object"
+                                        string="Fill Attendees from Booking"
+                                        class="btn-secondary mb-2"/>
+                                <button name="action_mark_all_present" type="object"
+                                        string="Mark All Present"
+                                        class="btn-secondary mb-2"
+                                        invisible="not attendance_ids"/>
+                                <field name="attendance_ids" nolabel="1">
+                                    <list editable="bottom">
+                                        <field name="pilgrim_id"
+                                               domain="[('booking_id', '=', parent.booking_id)]"/>
+                                        <field name="attendance" widget="badge"
+                                               decoration-success="attendance == 'present'"
+                                               decoration-warning="attendance == 'reschedule'"
+                                               decoration-danger="attendance == 'absent'"/>
+                                        <field name="note" optional="show"/>
+                                    </list>
+                                </field>
+                                <group class="mt-2">
+                                    <field name="attendee_count" string="Attendees"/>
+                                    <field name="present_count" string="Present"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <!-- Search -->
+        <record id="view_umrah_manasik_search" model="ir.ui.view">
+            <field name="name">umrah.manasik.search</field>
+            <field name="model">umrah.manasik</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="booking_id"/>
+                    <field name="trainer_id"/>
+                    <filter name="upcoming" string="Upcoming"
+                            domain="[('date', '&gt;=', context_today.strftime('%Y-%m-%d'))]"/>
+                    <filter name="past" string="Past"
+                            domain="[('date', '&lt;', context_today.strftime('%Y-%m-%d'))]"/>
+                    <group>
+                        <filter name="group_booking" string="Booking" context="{'group_by': 'booking_id'}"/>
+                        <filter name="group_month" string="Month" context="{'group_by': 'date:month'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Actions -->
+        <record id="action_umrah_manasik" model="ir.actions.act_window">
+            <field name="name">Manasik</field>
+            <field name="res_model">umrah.manasik</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="view_umrah_manasik_search"/>
+            <field name="context">{'search_default_upcoming': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No manasik sessions yet
+                </p>
+                <p>
+                    Create a manasik session per booking, fill the attendees and
+                    record their attendance.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Operational task catalog. Deadlines are computed per booking:
+             anchor departure + offset N = H-N before departure;
+             anchor return + offset N = N days after return. -->
+        <record id="task_type_payment_follow_up" model="umrah.task.type">
+            <field name="name">Payment Follow Up</field>
+            <field name="sequence">10</field>
+            <field name="anchor">departure</field>
+            <field name="deadline_offset">90</field>
+            <field name="required">False</field>
+        </record>
+        <record id="task_type_passport_collection" model="umrah.task.type">
+            <field name="name">Passport Collection</field>
+            <field name="sequence">20</field>
+            <field name="anchor">departure</field>
+            <field name="deadline_offset">60</field>
+        </record>
+        <record id="task_type_document_verification" model="umrah.task.type">
+            <field name="name">Document Verification</field>
+            <field name="sequence">30</field>
+            <field name="anchor">departure</field>
+            <field name="deadline_offset">45</field>
+        </record>
+        <record id="task_type_visa_processing" model="umrah.task.type">
+            <field name="name">Visa Processing</field>
+            <field name="sequence">40</field>
+            <field name="anchor">departure</field>
+            <field name="deadline_offset">30</field>
+        </record>
+        <record id="task_type_ticket_confirmation" model="umrah.task.type">
+            <field name="name">Ticket Confirmation</field>
+            <field name="sequence">50</field>
+            <field name="anchor">departure</field>
+            <field name="deadline_offset">14</field>
+        </record>
+        <record id="task_type_hotel_confirmation" model="umrah.task.type">
+            <field name="name">Hotel Confirmation</field>
+            <field name="sequence">60</field>
+            <field name="anchor">departure</field>
+            <field name="deadline_offset">10</field>
+        </record>
+        <record id="task_type_manasik_session" model="umrah.task.type">
+            <field name="name">Manasik Session</field>
+            <field name="sequence">70</field>
+            <field name="anchor">departure</field>
+            <field name="deadline_offset">7</field>
+        </record>
+        <record id="task_type_departure_preparation" model="umrah.task.type">
+            <field name="name">Departure Preparation</field>
+            <field name="sequence">80</field>
+            <field name="anchor">departure</field>
+            <field name="deadline_offset">7</field>
+        </record>
+        <record id="task_type_post_trip" model="umrah.task.type">
+            <field name="name">Post Trip Follow Up</field>
+            <field name="sequence">90</field>
+            <field name="anchor">return</field>
+            <field name="deadline_offset">3</field>
+            <field name="required">False</field>
+        </record>
+    </data>
+</odoo>

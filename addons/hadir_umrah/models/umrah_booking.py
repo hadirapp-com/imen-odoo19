@@ -61,6 +61,34 @@ class UmrahBooking(models.Model):
     document_progress = fields.Float(
         string='Document Progress', compute='_compute_document_progress', store=True)
 
+    visa_ids = fields.One2many('umrah.visa', 'booking_id', string='Visas')
+    visa_count = fields.Integer(compute='_compute_visa', store=True)
+    visa_approved_count = fields.Integer(
+        string='Approved Visas', compute='_compute_visa', store=True)
+    visa_status = fields.Selection(
+        selection=[
+            ('none', 'No Visa'),
+            ('in_progress', 'Visa In Progress'),
+            ('approved', 'Visa Approved'),
+            ('rejected', 'Visa Rejected'),
+            ('expired', 'Visa Expired'),
+        ],
+        string='Visa Status', compute='_compute_visa', store=True, index=True)
+
+    manasik_ids = fields.One2many('umrah.manasik', 'booking_id', string='Manasik Sessions')
+    manasik_count = fields.Integer(compute='_compute_manasik', store=True)
+
+    flight_ids = fields.One2many('umrah.flight', 'booking_id', string='Flights')
+    flight_count = fields.Integer(compute='_compute_manasik', store=True)
+    meeting_point = fields.Char(
+        string='Meeting Point',
+        help='Meeting point and time shared with pilgrims on the portal departure information.')
+
+    task_ids = fields.One2many('project.task', 'umrah_booking_id', string='Operational Tasks')
+    task_count = fields.Integer(compute='_compute_tasks', store=True)
+    task_open_count = fields.Integer(
+        string='Open Tasks', compute='_compute_tasks', store=True)
+
     payment_status = fields.Selection(
         selection=PAYMENT_STATES, string='Payment Status',
         compute='_compute_payment', store=True)
@@ -143,6 +171,37 @@ class UmrahBooking(models.Model):
             booking.progress = round(
                 (document_ratio * 0.6 + payment_ratio * 0.4) * 100.0, 1)
 
+    @api.depends('visa_ids.state')
+    def _compute_visa(self):
+        for booking in self:
+            visas = booking.visa_ids
+            booking.visa_count = len(visas)
+            booking.visa_approved_count = len(
+                visas.filtered(lambda v: v.state == 'approved'))
+            if not visas:
+                booking.visa_status = 'none'
+            elif visas.filtered(lambda v: v.state == 'rejected'):
+                booking.visa_status = 'rejected'
+            elif all(visa.state == 'approved' for visa in visas):
+                booking.visa_status = 'approved'
+            elif not visas.filtered(lambda v: v.state in ('draft', 'submitted', 'processing')):
+                booking.visa_status = 'expired'
+            else:
+                booking.visa_status = 'in_progress'
+
+    @api.depends('manasik_ids', 'flight_ids')
+    def _compute_manasik(self):
+        for booking in self:
+            booking.manasik_count = len(booking.manasik_ids)
+            booking.flight_count = len(booking.flight_ids)
+
+    @api.depends('task_ids')
+    def _compute_tasks(self):
+        for booking in self:
+            booking.task_count = len(booking.task_ids)
+            booking.task_open_count = len(booking.task_ids.filtered(
+                lambda task: not task.stage_id.fold))
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -153,6 +212,14 @@ class UmrahBooking(models.Model):
         bookings = super().create(vals_list)
         bookings._generate_document_checklist()
         return bookings
+
+    def write(self, vals):
+        bookings = self.filtered(lambda b: b.task_ids) if (
+            'departure_date' in vals or 'return_date' in vals) else self.browse()
+        res = super().write(vals)
+        if bookings:
+            bookings._reschedule_operational_tasks()
+        return res
 
     @api.ondelete(at_uninstall=False)
     def _unlink_except_active(self):
@@ -204,6 +271,85 @@ class UmrahBooking(models.Model):
         return True
 
     # -------------------------------------------------------------
+    # Operational tasks & visas
+    # -------------------------------------------------------------
+    def _generate_operational_tasks(self):
+        """Create one task per active task type and booking (deduplicated)."""
+        Task = self.env['project.task']
+        task_types = self.env['umrah.task.type'].search([
+            ('active', '=', True),
+            '|', ('company_id', '=', False),
+            ('company_id', 'in', self.company_id.ids),
+        ])
+        if not task_types:
+            return True
+        for booking in self:
+            existing = set(Task.search(
+                [('umrah_booking_id', '=', booking.id)]
+            ).task_type_id.ids)
+            missing_types = task_types.filtered(lambda t: t.id not in existing)
+            if not missing_types:
+                continue
+            project = booking._ensure_project()
+            Task.create(
+                [booking._prepare_task_vals(task_type, project) for task_type in missing_types])
+        return True
+
+    def _prepare_task_vals(self, task_type, project):
+        self.ensure_one()
+        user_id = task_type.responsible_user_id.id or self.user_id.id
+        return {
+            'name': task_type.name,
+            'project_id': project.id,
+            'umrah_booking_id': self.id,
+            'task_type_id': task_type.id,
+            'user_ids': [(4, user_id)] if user_id else False,
+            'date_deadline': self._task_deadline_datetime(task_type),
+            'company_id': self.company_id.id,
+        }
+
+    def _task_deadline_datetime(self, task_type):
+        self.ensure_one()
+        if task_type.anchor == 'return':
+            anchor = self.return_date or self.departure_date
+            deadline_date = fields.Date.add(anchor, days=task_type.deadline_offset)
+        else:
+            anchor = self.departure_date
+            deadline_date = fields.Date.add(anchor, days=-task_type.deadline_offset)
+        if not deadline_date:
+            return False
+        return fields.Datetime.to_datetime(deadline_date)
+
+    def action_generate_tasks(self):
+        self._generate_operational_tasks()
+        return True
+
+    def _reschedule_operational_tasks(self):
+        """Recompute deadlines of open generated tasks after a date change."""
+        for booking in self:
+            tasks = booking.task_ids.filtered(
+                lambda task: task.task_type_id and not task.stage_id.fold)
+            for task in tasks:
+                deadline = booking._task_deadline_datetime(task.task_type_id)
+                if task.date_deadline != deadline:
+                    task.date_deadline = deadline
+        return True
+
+    def action_generate_visas(self):
+        """Create a draft visa for every pilgrim without one (passport snapshot)."""
+        Visa = self.env['umrah.visa']
+        for booking in self:
+            existing = set(booking.visa_ids.pilgrim_id.ids)
+            missing = booking.pilgrim_ids.filtered(
+                lambda p: p.id not in existing and p.passport_number)
+            Visa.create([{
+                'booking_id': booking.id,
+                'pilgrim_id': pilgrim.id,
+                'passport_number': pilgrim.passport_number,
+            } for pilgrim in missing])
+        return True
+
+    # -------------------------------------------------------------
     # State machine
     # -------------------------------------------------------------
     def action_confirm(self):
@@ -217,6 +363,7 @@ class UmrahBooking(models.Model):
                 raise UserError(_('Booking %s: departure date cannot be in the past.', booking.name))
         self.write({'state': 'confirmed'})
         self._generate_document_checklist()
+        self._generate_operational_tasks()
         return True
 
     def _transition(self, from_state, to_state):
@@ -246,7 +393,16 @@ class UmrahBooking(models.Model):
                     'Booking %(booking)s cannot be set ready: %(count)s required '
                     'document(s) are not verified yet.',
                     booking=booking.name, count=len(missing)))
-            # Phase 2: also require every visa approved when visa records exist
+            pending_visas = booking.visa_ids.filtered(lambda v: v.state != 'approved')
+            if pending_visas:
+                raise UserError(_(
+                    'Booking %(booking)s cannot be set ready: %(approved)s of '
+                    '%(total)s visa(s) approved. Pending: %(pilgrims)s.',
+                    booking=booking.name,
+                    approved=booking.visa_approved_count,
+                    total=booking.visa_count,
+                    pilgrims=', '.join(
+                        pending_visas.pilgrim_id.mapped('full_name'))))
         self._transition('visa', 'ready')
         self.pilgrim_ids.filtered(lambda p: p.state == 'registered').write({'state': 'ready'})
 
@@ -280,16 +436,21 @@ class UmrahBooking(models.Model):
     # Operations
     # -------------------------------------------------------------
     def action_create_project(self):
-        Project = self.env['project.project']
         for booking in self.filtered(lambda b: not b.project_id and b.state not in ('draft', 'cancelled')):
-            booking.project_id = Project.create({
-                'name': _('Umrah %s - %s', booking.name, booking.partner_id.display_name),
-                'partner_id': booking.partner_id.id,
-                'company_id': booking.company_id.id,
-                'date_start': booking.departure_date,
-                'date': booking.return_date,
-            })
+            booking._ensure_project()
         return True
+
+    def _ensure_project(self):
+        self.ensure_one()
+        if not self.project_id:
+            self.project_id = self.env['project.project'].create({
+                'name': _('Umrah %s - %s', self.name, self.partner_id.display_name),
+                'partner_id': self.partner_id.id,
+                'company_id': self.company_id.id,
+                'date_start': self.departure_date,
+                'date': self.return_date,
+            })
+        return self.project_id
 
     def action_open_project(self):
         self.ensure_one()
@@ -339,15 +500,62 @@ class UmrahBooking(models.Model):
         for booking in bookings:
             missing = booking.document_ids.filtered(
                 lambda d: d.required and d.state not in ('verified', 'not_required'))
-            if not missing:
-                continue
             days_left = (booking.departure_date - today).days if booking.departure_date else 0
+            if not missing:
+                if booking.state == 'verification' and booking.pilgrim_ids:
+                    booking._schedule_deduped_activity(_('Ready for visa'), _(
+                        'All required documents are verified. Move this booking '
+                        'to visa processing when ready.'))
+                continue
             note = _(
                 '%(count)s required document(s) still incomplete for %(pilgrims)s '
                 'pilgrim(s) - %(days)s day(s) before departure (%(departure)s).',
                 count=len(missing), pilgrims=booking.pilgrim_count,
                 days=days_left, departure=booking.departure_date)
             booking._schedule_deduped_activity(_('Missing documents'), note)
+
+    @api.model
+    def _cron_payment_overdue(self):
+        """Daily: warn about bookings with overdue invoices."""
+        bookings = self.search([
+            ('payment_status', '=', 'overdue'),
+            ('state', 'not in', ('cancelled', 'completed')),
+        ])
+        for booking in bookings:
+            invoices = booking.sale_order_id.invoice_ids.filtered(
+                lambda m: m.is_invoice() and m.state == 'posted'
+                and m.payment_state in ('not_paid', 'partial')
+                and m.invoice_date_due
+                and m.invoice_date_due < fields.Date.context_today(self))
+            if not invoices:
+                continue
+            oldest = min(invoices.mapped('invoice_date_due'))
+            booking._schedule_deduped_activity(_('Payment overdue'), _(
+                'Invoice(s) %(count)s overdue since %(date)s. Amount due: '
+                '%(due)s %(currency)s.',
+                count=len(invoices), date=oldest,
+                due=booking.amount_due, currency=booking.currency_id.name or ''))
+
+    @api.model
+    def _cron_departure_checklist(self):
+        """Daily: final checklist reminders at H-7 and H-1 before departure."""
+        today = fields.Date.context_today(self)
+        states = [('state', 'in', ('confirmed', 'document', 'verification', 'visa', 'ready'))]
+        h7_bookings = self.search(states + [('departure_date', '=', fields.Date.add(today, days=7))])
+        h1_bookings = self.search(states + [('departure_date', '=', fields.Date.add(today, days=1))])
+        for booking in h7_bookings:
+            booking._schedule_deduped_activity(_('Departure H-7 checklist'), _(
+                'One week before departure (%(departure)s). %(docs_open)s document(s) '
+                'pending, %(visas_open)s visa(s) not approved, %(tasks_open)s task(s) open.',
+                departure=booking.departure_date,
+                docs_open=booking.document_count - booking.document_verified_count,
+                visas_open=booking.visa_count - booking.visa_approved_count,
+                tasks_open=booking.task_open_count))
+        for booking in h1_bookings:
+            booking._schedule_deduped_activity(_('Departure tomorrow - final checklist'), _(
+                'Departure is tomorrow (%(departure)s). Verify passports, tickets and '
+                'hotel vouchers are in hand for %(pilgrims)s pilgrim(s).',
+                departure=booking.departure_date, pilgrims=booking.pilgrim_count))
 
     # -------------------------------------------------------------
     # Smart buttons
@@ -383,6 +591,45 @@ class UmrahBooking(models.Model):
             'res_model': 'umrah.document',
             'view_mode': 'list,form',
             'domain': [('booking_id', '=', self.id)],
+        }
+
+    def action_view_visas(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Visas'),
+            'res_model': 'umrah.visa',
+            'view_mode': 'list,form',
+            'domain': [('booking_id', '=', self.id)],
+            'context': {'default_booking_id': self.id},
+        }
+
+    def action_view_manasiks(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Manasik'),
+            'res_model': 'umrah.manasik',
+            'view_mode': 'list,form',
+            'domain': [('booking_id', '=', self.id)],
+            'context': {
+                'default_booking_id': self.id,
+                'default_name': _('Manasik - %s', self.name),
+            },
+        }
+
+    def action_view_tasks(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Operational Tasks'),
+            'res_model': 'project.task',
+            'view_mode': 'list,form,kanban',
+            'domain': [('umrah_booking_id', '=', self.id)],
+            'context': {
+                'default_umrah_booking_id': self.id,
+                'default_project_id': self.project_id.id,
+            },
         }
 
     def action_view_invoices(self):

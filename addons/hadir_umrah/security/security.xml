@@ -73,5 +73,74 @@
             <field name="model_id" ref="model_umrah_document_template"/>
             <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
         </record>
+
+        <record id="rule_umrah_visa_company" model="ir.rule">
+            <field name="name">Umrah Visa: multi-company</field>
+            <field name="model_id" ref="model_umrah_visa"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_umrah_manasik_company" model="ir.rule">
+            <field name="name">Umrah Manasik: multi-company</field>
+            <field name="model_id" ref="model_umrah_manasik"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_umrah_manasik_attendance_company" model="ir.rule">
+            <field name="name">Umrah Manasik Attendance: multi-company</field>
+            <field name="model_id" ref="model_umrah_manasik_attendance"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Portal isolation: a jamaah only ever sees records tied to his own partner.
+             Grant portal access on the pilgrim's auto-created contact. -->
+        <record id="rule_umrah_booking_portal" model="ir.rule">
+            <field name="name">Umrah Booking: portal: own bookings</field>
+            <field name="model_id" ref="model_umrah_booking"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+            <field name="domain_force">[('pilgrim_ids.partner_id', '=', user.partner_id.id)]</field>
+        </record>
+
+        <record id="rule_umrah_pilgrim_portal" model="ir.rule">
+            <field name="name">Umrah Pilgrim: portal: own record</field>
+            <field name="model_id" ref="model_umrah_pilgrim"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+            <field name="domain_force">[('partner_id', '=', user.partner_id.id)]</field>
+        </record>
+
+        <record id="rule_umrah_document_portal" model="ir.rule">
+            <field name="name">Umrah Document: portal: own documents</field>
+            <field name="model_id" ref="model_umrah_document"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+            <field name="domain_force">[('pilgrim_id.partner_id', '=', user.partner_id.id)]</field>
+        </record>
+
+        <record id="rule_umrah_visa_portal" model="ir.rule">
+            <field name="name">Umrah Visa: portal: own visa</field>
+            <field name="model_id" ref="model_umrah_visa"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+            <field name="domain_force">[('pilgrim_id.partner_id', '=', user.partner_id.id)]</field>
+        </record>
+
+        <record id="rule_umrah_manasik_portal" model="ir.rule">
+            <field name="name">Umrah Manasik: portal: sessions of own bookings</field>
+            <field name="model_id" ref="model_umrah_manasik"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+            <field name="domain_force">[('booking_id.pilgrim_ids.partner_id', '=', user.partner_id.id)]</field>
+        </record>
+
+        <record id="rule_umrah_manasik_attendance_portal" model="ir.rule">
+            <field name="name">Umrah Manasik Attendance: portal: own attendance</field>
+            <field name="model_id" ref="model_umrah_manasik_attendance"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+            <field name="domain_force">[('pilgrim_id.partner_id', '=', user.partner_id.id)]</field>
+        </record>
+
+        <record id="rule_umrah_flight_portal" model="ir.rule">
+            <field name="name">Umrah Flight: portal: flights of own bookings</field>
+            <field name="model_id" ref="model_umrah_flight"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+            <field name="domain_force">[('booking_id.pilgrim_ids.partner_id', '=', user.partner_id.id)]</field>
+        </record>
     </data>
 </odoo>

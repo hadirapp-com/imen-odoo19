@@ -4,4 +4,8 @@ from . import umrah_document_type
 from . import umrah_document_template
 from . import umrah_document
 from . import umrah_pilgrim
+from . import umrah_visa
+from . import umrah_manasik
+from . import umrah_task_type
+from . import umrah_flight
 from . import umrah_booking

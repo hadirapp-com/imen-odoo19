@@ -36,6 +36,18 @@
                   action="action_umrah_document" sequence="20"/>
         <menuitem id="menu_umrah_jamaah_passport" name="Passport" parent="menu_umrah_jamaah"
                   action="action_umrah_pilgrim_passport" sequence="30"/>
+        <menuitem id="menu_umrah_jamaah_visa" name="Visa" parent="menu_umrah_jamaah"
+                  action="action_umrah_visa" sequence="40"/>
+
+        <!-- Operation -->
+        <menuitem id="menu_umrah_operation" name="Operation" parent="menu_umrah_root" sequence="40"
+                  groups="hadir_umrah.group_umrah_user"/>
+        <menuitem id="menu_umrah_operation_tasks" name="Tasks" parent="menu_umrah_operation"
+                  action="action_umrah_task" sequence="10"/>
+        <menuitem id="menu_umrah_operation_manasik" name="Manasik" parent="menu_umrah_operation"
+                  action="action_umrah_manasik" sequence="20"/>
+        <menuitem id="menu_umrah_operation_flight" name="Flight" parent="menu_umrah_operation"
+                  action="action_umrah_flight" sequence="30"/>
 
         <!-- Sales (standard Sales app actions) -->
         <menuitem id="menu_umrah_sales" name="Sales" parent="menu_umrah_root" sequence="50"
@@ -72,6 +84,8 @@
                   action="action_umrah_document_type" sequence="20"/>
         <menuitem id="menu_umrah_config_document_template" name="Document Template" parent="menu_umrah_config"
                   action="action_umrah_document_template" sequence="30"/>
+        <menuitem id="menu_umrah_config_task_template" name="Task Template" parent="menu_umrah_config"
+                  action="action_umrah_task_type" sequence="40"/>
 
     </data>
 </odoo>

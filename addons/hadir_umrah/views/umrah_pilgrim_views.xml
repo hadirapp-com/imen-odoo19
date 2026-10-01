@@ -93,6 +93,21 @@
                                     </list>
                                 </field>
                             </page>
+                            <page name="visa" string="Visa" invisible="not visa_ids">
+                                <field name="visa_ids">
+                                    <list>
+                                        <field name="booking_id"/>
+                                        <field name="visa_number"/>
+                                        <field name="submission_date" optional="show"/>
+                                        <field name="approval_date" optional="show"/>
+                                        <field name="expiry_date" optional="show"/>
+                                        <field name="state" widget="badge"
+                                               decoration-info="state in ('draft', 'submitted', 'processing')"
+                                               decoration-success="state == 'approved'"
+                                               decoration-danger="state in ('rejected', 'expired')"/>
+                                    </list>
+                                </field>
+                            </page>
                             <page name="notes" string="Notes">
                                 <field name="notes"/>
                             </page>

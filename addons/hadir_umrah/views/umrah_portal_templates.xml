@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Card on the /my portal home -->
+        <template id="portal_my_home_umrah" name="Portal My Home : My Umrah"
+                  inherit_id="portal.portal_my_home">
+            <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="icon" t-value="'fa-plane'"/>
+                    <t t-set="title" t-value="'My Umrah'"/>
+                    <t t-set="text" t-value="'Booking, documents, payments, manasik and departure information.'"/>
+                    <t t-set="url" t-value="'/my/umrah'"/>
+                </t>
+            </xpath>
+        </template>
+
+        <!-- Bookings list (only shown when the jamaah has several bookings) -->
+        <template id="portal_my_umrah" name="My Umrah Bookings">
+            <t t-call="portal.portal_layout">
+                <h3 class="mb-4">My Umrah</h3>
+                <t t-if="not bookings">
+                    <div class="alert alert-info" role="alert">
+                        You have no Umrah booking yet. Please contact your travel agent.
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="row g-3">
+                        <t t-foreach="bookings" t-as="booking">
+                            <div class="col-12 col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title mb-1">
+                                            <a t-att-href="'/my/umrah/%d' % booking.id">
+                                                <t t-out="booking.name"/>
+                                            </a>
+                                        </h5>
+                                        <div class="text-muted mb-2"><t t-out="booking.product_id.name"/></div>
+                                        <div class="mb-1">
+                                            <i class="fa fa-plane me-1" role="img" aria-label="Departure" title="Departure"/>
+                                            <t t-out="booking.departure_date" t-options='{"widget": "date"}'/>
+                                        </div>
+                                        <div class="progress mb-2" style="height: 6px;">
+                                            <div class="progress-bar"
+                                                 t-att-style="'width: %d%%' % (booking.progress or 0)"/>
+                                        </div>
+                                        <span class="badge text-bg-secondary"><t t-out="booking.state"/></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+            </t>
+        </template>
+
+        <!-- MY UMRAH detail page -->
+        <template id="portal_umrah_booking" name="My Umrah Booking">
+            <t t-call="portal.portal_layout">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h3 class="mb-0">My Umrah</h3>
+                    <span class="badge text-bg-secondary" t-out="booking.state"/>
+                </div>
+
+                <t t-if="uploaded">
+                    <div class="alert alert-success" role="alert">
+                        Document uploaded. Thank you! It will now be verified by our team.
+                    </div>
+                </t>
+                <t t-if="error == 'nofile'">
+                    <div class="alert alert-danger" role="alert">Please choose a file before uploading.</div>
+                </t>
+                <t t-if="error == 'state'">
+                    <div class="alert alert-danger" role="alert">
+                        This document can no longer be updated. Please contact your travel agent.
+                    </div>
+                </t>
+
+                <!-- General information -->
+                <div class="card mb-4">
+                    <div class="card-header">Trip Information</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 col-md-6">
+                                <dl class="row mb-0">
+                                    <dt class="col-5">Booking</dt>
+                                    <dd class="col-7"><t t-out="booking.name"/></dd>
+                                    <dt class="col-5">Package</dt>
+                                    <dd class="col-7"><t t-out="booking.product_id.name"/></dd>
+                                    <dt class="col-5">Departure</dt>
+                                    <dd class="col-7"><t t-out="booking.departure_date" t-options='{"widget": "date"}'/></dd>
+                                    <dt class="col-5">Return</dt>
+                                    <dd class="col-7"><t t-out="booking.return_date" t-options='{"widget": "date"}'/></dd>
+                                </dl>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <dl class="row mb-0">
+                                    <dt class="col-5">Jamaah</dt>
+                                    <dd class="col-7"><t t-out="pilgrim.full_name"/></dd>
+                                    <dt class="col-5">Progress</dt>
+                                    <dd class="col-7"><t t-out="'%d%%' % (booking.progress or 0)"/></dd>
+                                    <t t-if="booking.meeting_point">
+                                        <dt class="col-5">Meeting Point</dt>
+                                        <dd class="col-7"><t t-out="booking.meeting_point"/></dd>
+                                    </t>
+                                </dl>
+                                <div class="progress mt-2" style="height: 8px;">
+                                    <div class="progress-bar" t-att-style="'width: %d%%' % (booking.progress or 0)"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between">
+                        <span>My Documents</span>
+                        <span><t t-out="'%d%% complete' % (pilgrim.document_progress or 0)"/></span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Document</th>
+                                        <th>Status</th>
+                                        <th>File</th>
+                                        <th class="w-25">Upload</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="documents" t-as="doc">
+                                        <tr>
+                                            <td>
+                                                <t t-out="doc.document_type_id.name"/>
+                                                <t t-if="not doc.required">
+                                                    <span class="badge text-bg-light ms-1">optional</span>
+                                                </t>
+                                            </td>
+                                            <td>
+                                                <span t-if="doc.state == 'verified'" class="badge text-bg-success">Verified</span>
+                                                <span t-elif="doc.state == 'submitted'" class="badge text-bg-info">Submitted</span>
+                                                <span t-elif="doc.state == 'verification'" class="badge text-bg-warning">In Verification</span>
+                                                <span t-elif="doc.state == 'rejected'" class="badge text-bg-danger">Rejected</span>
+                                                <span t-elif="doc.state == 'expired'" class="badge text-bg-danger">Expired</span>
+                                                <span t-elif="doc.state == 'not_required'" class="badge text-bg-light">Not Required</span>
+                                                <span t-else="" class="badge text-bg-secondary">Missing</span>
+                                                <t t-if="doc.reject_reason">
+                                                    <div class="text-danger small mt-1">
+                                                        <t t-out="doc.reject_reason"/>
+                                                    </div>
+                                                </t>
+                                            </td>
+                                            <td>
+                                                <t t-foreach="doc.attachment_ids" t-as="attachment">
+                                                    <a t-att-href="'/web/content/%d?access_token=%s&amp;download=true' % (
+                                                        attachment.id, attachment_tokens.get(attachment.id, ''))">
+                                                        <i class="fa fa-download me-1" role="img" aria-label="Download" title="Download"/>
+                                                        <t t-out="attachment.name"/>
+                                                    </a>
+                                                    <t t-if="not attachment_last"><br/></t>
+                                                </t>
+                                                <t t-if="not doc.attachment_ids">
+                                                    <span class="text-muted">-</span>
+                                                </t>
+                                            </td>
+                                            <td>
+                                                <t t-if="doc.state in ('missing', 'rejected', 'submitted', 'verification')">
+                                                    <form t-att-action="'/my/umrah/document/%d/upload' % doc.id"
+                                                          method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                        <input type="file" name="document_file"
+                                                               class="form-control form-control-sm" required="required"/>
+                                                        <button type="submit" class="btn btn-primary btn-sm text-nowrap">Upload</button>
+                                                    </form>
+                                                </t>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between">
+                        <span>Payment</span>
+                        <span t-if="booking.payment_status == 'paid'" class="badge text-bg-success">Paid</span>
+                        <span t-elif="booking.payment_status == 'partial'" class="badge text-bg-info">Partially Paid</span>
+                        <span t-elif="booking.payment_status == 'overdue'" class="badge text-bg-danger">Overdue</span>
+                        <span t-else="" class="badge text-bg-secondary">Unpaid</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="text-muted small">Total</div>
+                                <strong t-out="booking.amount_total"
+                                        t-options='{"widget": "monetary", "display_currency": booking.currency_id}'/>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-muted small">Paid</div>
+                                <strong t-out="booking.amount_paid"
+                                        t-options='{"widget": "monetary", "display_currency": booking.currency_id}'/>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-muted small">Outstanding</div>
+                                <strong t-out="booking.amount_due"
+                                        t-options='{"widget": "monetary", "display_currency": booking.currency_id}'/>
+                            </div>
+                        </div>
+                        <div class="progress mt-3" style="height: 8px;">
+                            <div class="progress-bar"
+                                 t-att-style="'width: %d%%' % ((booking.amount_paid / booking.amount_total * 100) if booking.amount_total else 0)"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manasik -->
+                <div class="card mb-4">
+                    <div class="card-header">Manasik Schedule</div>
+                    <t t-if="not manasiks">
+                        <div class="card-body text-muted">No manasik session scheduled yet.</div>
+                    </t>
+                    <t t-else="">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Session</th>
+                                            <th>Date &amp; Time</th>
+                                            <th>Location</th>
+                                            <th>My Attendance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="manasiks" t-as="manasik">
+                                            <tr>
+                                                <td>
+                                                    <t t-out="manasik.name"/>
+                                                    <t t-if="manasik.trainer_id">
+                                                        <div class="text-muted small">Trainer: <t t-out="manasik.trainer_id.name"/></div>
+                                                    </t>
+                                                </td>
+                                                <td>
+                                                    <t t-out="manasik.date" t-options='{"widget": "date"}'/>
+                                                    <div class="text-muted small">
+                                                        <t t-out="manasik.start_time" t-options='{"widget": "float_time"}'/>
+                                                        - <t t-out="manasik.end_time" t-options='{"widget": "float_time"}'/>
+                                                    </div>
+                                                </td>
+                                                <td><t t-out="manasik.location or '-'"/></td>
+                                                <td>
+                                                    <t t-set="att" t-value="my_attendance.get(manasik.id)"/>
+                                                    <span t-if="att and att.attendance == 'present'" class="badge text-bg-success">Present</span>
+                                                    <span t-elif="att and att.attendance == 'reschedule'" class="badge text-bg-warning">Reschedule</span>
+                                                    <span t-elif="att and att.attendance == 'absent'" class="badge text-bg-danger">Absent</span>
+                                                    <span t-else="" class="badge text-bg-light">Not Recorded</span>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Flights -->
+                <div class="card mb-4">
+                    <div class="card-header">Flights</div>
+                    <t t-if="not flights">
+                        <div class="card-body text-muted">Flight information will be published here.</div>
+                    </t>
+                    <t t-else="">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Trip</th>
+                                            <th>Flight</th>
+                                            <th>Departure</th>
+                                            <th>Arrival</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="flights" t-as="flight">
+                                            <tr>
+                                                <td>
+                                                    <span t-if="flight.flight_type == 'outbound'" class="badge text-bg-primary">Departure</span>
+                                                    <span t-else="" class="badge text-bg-success">Return</span>
+                                                </td>
+                                                <td>
+                                                    <t t-out="flight.airline"/>
+                                                    <div class="text-muted small"><t t-out="flight.flight_number"/></div>
+                                                </td>
+                                                <td>
+                                                    <t t-out="flight.departure_datetime" t-options='{"widget": "datetime"}'/>
+                                                    <div class="text-muted small">
+                                                        <t t-out="flight.departure_airport"/><t t-if="flight.departure_city">, <t t-out="flight.departure_city"/></t>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <t t-out="flight.arrival_datetime" t-options='{"widget": "datetime"}'/>
+                                                    <div class="text-muted small">
+                                                        <t t-out="flight.arrival_airport"/><t t-if="flight.arrival_city">, <t t-out="flight.arrival_city"/></t>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <div class="mb-4">
+                    <a href="/my" class="btn btn-secondary">
+                        <i class="fa fa-arrow-left me-1" role="img" aria-label="Back" title="Back"/> Back to My Portal
+                    </a>
+                </div>
+            </t>
+        </template>
+
+    </data>
+</odoo>

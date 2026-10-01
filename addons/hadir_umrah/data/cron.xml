@@ -30,5 +30,35 @@
             <field name="interval_type">days</field>
             <field name="active">True</field>
         </record>
+
+        <record id="ir_cron_payment_overdue" model="ir.cron">
+            <field name="name">Umrah: Payment Overdue Reminder</field>
+            <field name="model_id" ref="model_umrah_booking"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_payment_overdue()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="ir_cron_departure_checklist" model="ir.cron">
+            <field name="name">Umrah: Departure Checklist H-7 / H-1</field>
+            <field name="model_id" ref="model_umrah_booking"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_departure_checklist()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="ir_cron_mark_visa_expired" model="ir.cron">
+            <field name="name">Umrah: Mark Expired Visas</field>
+            <field name="model_id" ref="model_umrah_visa"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_mark_expired()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active">True</field>
+        </record>
     </data>
 </odoo>

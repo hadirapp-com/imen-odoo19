@@ -60,6 +60,7 @@ class UmrahPilgrim(models.Model):
         selection=PILGRIM_STATES, string='Status',
         default='registered', required=True, tracking=True)
     document_ids = fields.One2many('umrah.document', 'pilgrim_id', string='Documents')
+    visa_ids = fields.One2many('umrah.visa', 'pilgrim_id', string='Visas')
     document_required_count = fields.Integer(
         string='Required Documents', compute='_compute_document_progress', store=True)
     document_verified_count = fields.Integer(
