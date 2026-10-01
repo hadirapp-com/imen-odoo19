@@ -1,0 +1,17 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_umrah_booking_user,umrah.booking user,model_umrah_booking,group_umrah_user,1,1,1,1
+access_umrah_booking_finance,umrah.booking finance,model_umrah_booking,group_umrah_finance,1,0,0,0
+access_umrah_booking_visa,umrah.booking visa,model_umrah_booking,group_umrah_visa,1,0,0,0
+access_umrah_pilgrim_user,umrah.pilgrim user,model_umrah_pilgrim,group_umrah_user,1,1,1,1
+access_umrah_pilgrim_finance,umrah.pilgrim finance,model_umrah_pilgrim,group_umrah_finance,1,0,0,0
+access_umrah_pilgrim_visa,umrah.pilgrim visa,model_umrah_pilgrim,group_umrah_visa,1,0,0,0
+access_umrah_document_user,umrah.document user,model_umrah_document,group_umrah_user,1,1,1,1
+access_umrah_document_finance,umrah.document finance,model_umrah_document,group_umrah_finance,1,0,0,0
+access_umrah_document_visa,umrah.document visa,model_umrah_document,group_umrah_visa,1,1,1,1
+access_umrah_document_type_user,umrah.document.type user,model_umrah_document_type,group_umrah_user,1,1,1,1
+access_umrah_document_type_finance,umrah.document.type finance,model_umrah_document_type,group_umrah_finance,1,0,0,0
+access_umrah_document_type_visa,umrah.document.type visa,model_umrah_document_type,group_umrah_visa,1,0,0,0
+access_umrah_document_template_user,umrah.document.template user,model_umrah_document_template,group_umrah_user,1,1,1,1
+access_umrah_document_template_line_user,umrah.document.template.line user,model_umrah_document_template_line,group_umrah_user,1,1,1,1
+access_umrah_booking_wizard_user,umrah.booking.create.wizard user,model_umrah_booking_create_wizard,group_umrah_user,1,1,1,1
+access_umrah_booking_wizard_line_user,umrah.booking.create.wizard.line user,model_umrah_booking_create_wizard_line,group_umrah_user,1,1,1,1

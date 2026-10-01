@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- List -->
+        <record id="view_umrah_booking_list" model="ir.ui.view">
+            <field name="name">umrah.booking.list</field>
+            <field name="model">umrah.booking</field>
+            <field name="arch" type="xml">
+                <list decoration-muted="state in ('cancelled', 'completed')">
+                    <field name="name"/>
+                    <field name="partner_id"/>
+                    <field name="product_id"/>
+                    <field name="departure_date"/>
+                    <field name="return_date"/>
+                    <field name="pilgrim_count" string="Jamaah"/>
+                    <field name="payment_status" widget="badge"
+                           decoration-success="payment_status == 'paid'"
+                           decoration-info="payment_status == 'partial'"
+                           decoration-danger="payment_status == 'overdue'"/>
+                    <field name="document_progress" widget="progressbar"/>
+                    <field name="progress" widget="progressbar"/>
+                    <field name="state" widget="badge"
+                           decoration-info="state == 'draft'"
+                           decoration-warning="state in ('confirmed', 'document', 'verification', 'visa')"
+                           decoration-success="state in ('ready', 'departed', 'returned', 'completed')"
+                           decoration-danger="state == 'cancelled'"
+                           optional="show"/>
+                    <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                    <field name="user_id" optional="hide" widget="many2one_avatar_user"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Kanban -->
+        <record id="view_umrah_booking_kanban" model="ir.ui.view">
+            <field name="name">umrah.booking.kanban</field>
+            <field name="model">umrah.booking</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_small_column" default_group_by="state" records_draggable="false">
+                    <field name="name"/>
+                    <field name="partner_id"/>
+                    <field name="product_id"/>
+                    <field name="departure_date"/>
+                    <field name="pilgrim_count"/>
+                    <field name="document_progress"/>
+                    <field name="payment_status"/>
+                    <field name="amount_total"/>
+                    <field name="currency_id"/>
+                    <templates>
+                        <t t-name="card">
+                            <div class="d-flex flex-column gap-1">
+                                <strong class="o_kanban_record_title"><field name="name"/></strong>
+                                <div><field name="partner_id"/></div>
+                                <div class="text-muted"><field name="product_id"/></div>
+                                <div>
+                                    <i class="fa fa-plane me-1" role="img" aria-label="Departure" title="Departure"/>
+                                    <field name="departure_date"/>
+                                </div>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="badge text-bg-secondary">
+                                        <t t-esc="record.pilgrim_count.value"/> Jamaah
+                                    </span>
+                                    <field name="payment_status" widget="badge"/>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar"
+                                         t-att-style="'width: ' + (record.document_progress.raw_value or 0) + '%'"/>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <!-- Form -->
+        <record id="view_umrah_booking_form" model="ir.ui.view">
+            <field name="name">umrah.booking.form</field>
+            <field name="model">umrah.booking</field>
+            <field name="arch" type="xml">
+                <form string="Umrah Booking">
+                    <header>
+                        <button name="action_confirm" type="object" string="Confirm"
+                                class="oe_highlight" invisible="state != 'draft'"/>
+                        <button name="action_create_project" type="object" string="Create Project"
+                                invisible="project_id or state in ('draft', 'cancelled')"/>
+                        <button name="action_start_documents" type="object" string="Start Documents"
+                                invisible="state != 'confirmed'"/>
+                        <button name="action_set_verification" type="object" string="Start Verification"
+                                invisible="state != 'document'"/>
+                        <button name="action_ready_for_visa" type="object" string="Ready for Visa"
+                                invisible="state != 'verification'"/>
+                        <button name="action_set_ready" type="object" string="Set Ready"
+                                class="oe_highlight" invisible="state != 'visa'"/>
+                        <button name="action_set_departed" type="object" string="Departed"
+                                class="oe_highlight" invisible="state != 'ready'"/>
+                        <button name="action_set_returned" type="object" string="Returned"
+                                invisible="state != 'departed'"/>
+                        <button name="action_set_completed" type="object" string="Complete"
+                                class="oe_highlight" invisible="state != 'returned'"/>
+                        <button name="action_cancel" type="object" string="Cancel"
+                                invisible="state in ('completed', 'cancelled')" confirm="Cancel this booking?"/>
+                        <button name="action_reset_draft" type="object" string="Reset to Draft"
+                                invisible="state != 'cancelled'"/>
+                        <field name="state" widget="statusbar"
+                               statusbar_visible="draft,confirmed,document,verification,visa,ready,departed,returned,completed"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_sale_order" type="object" class="oe_stat_button"
+                                    icon="fa-shopping-cart" invisible="not sale_order_id">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Sales Order:</span>
+                                    <span class="o_stat_value"><field name="sale_order_id"/></span>
+                                </div>
+                            </button>
+                            <button name="action_view_pilgrims" type="object" class="oe_stat_button" icon="fa-users">
+                                <field name="pilgrim_count" widget="statinfo" string="Pilgrims"/>
+                            </button>
+                            <button name="action_view_documents" type="object" class="oe_stat_button" icon="fa-file">
+                                <field name="document_count" widget="statinfo" string="Documents"/>
+                            </button>
+                            <button name="action_view_invoices" type="object" class="oe_stat_button"
+                                    icon="fa-pencil-square-o" invisible="not sale_order_id">
+                                <field name="amount_invoiced" widget="statinfo" string="Invoiced"/>
+                            </button>
+                            <button name="action_view_payments" type="object" class="oe_stat_button"
+                                    icon="fa-money" invisible="not sale_order_id">
+                                <field name="amount_paid" widget="statinfo" string="Paid"/>
+                            </button>
+                            <button name="action_open_project" type="object" class="oe_stat_button"
+                                    icon="fa-tasks" invisible="not project_id">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Project</span>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="name" readonly="1"/></h1>
+                        </div>
+                        <group>
+                            <group name="main">
+                                <field name="partner_id" readonly="state != 'draft'"/>
+                                <field name="sale_order_id" readonly="state != 'draft'"/>
+                                <field name="product_id" readonly="state != 'draft'"/>
+                                <field name="user_id" widget="many2one_avatar_user"/>
+                                <field name="project_id" invisible="not project_id"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                            <group name="dates">
+                                <field name="departure_date" readonly="state != 'draft'"/>
+                                <field name="return_date" readonly="state != 'draft'"/>
+                                <field name="payment_status" widget="badge"/>
+                                <field name="document_progress" widget="progressbar"/>
+                                <field name="progress" widget="progressbar"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="pilgrims" string="Jamaah">
+                                <field name="pilgrim_ids">
+                                    <list editable="bottom">
+                                        <field name="full_name"/>
+                                        <field name="gender"/>
+                                        <field name="birth_date" optional="show"/>
+                                        <field name="phone"/>
+                                        <field name="passport_number"/>
+                                        <field name="passport_expiry_date" optional="show"/>
+                                        <field name="document_progress" widget="progressbar" optional="show"/>
+                                        <field name="state" widget="badge" optional="show"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page name="documents" string="Documents">
+                                <button name="action_generate_checklist" type="object"
+                                        string="Generate / Complete Checklist"
+                                        class="btn-secondary mb-2" invisible="pilgrim_count == 0"/>
+                                <field name="document_ids" nolabel="1">
+                                    <list>
+                                        <field name="document_type_id"/>
+                                        <field name="pilgrim_id"/>
+                                        <field name="required" widget="boolean_toggle" optional="show"/>
+                                        <field name="state" widget="badge"
+                                               decoration-success="state == 'verified'"
+                                               decoration-danger="state in ('missing', 'rejected', 'expired')"
+                                               decoration-warning="state in ('submitted', 'verification')"/>
+                                        <field name="submitted_date" optional="hide"/>
+                                        <field name="verified_date" optional="hide"/>
+                                        <field name="expiry_date" optional="show"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page name="payment" string="Payment">
+                                <group>
+                                    <group name="payment_amounts">
+                                        <field name="amount_total"/>
+                                        <field name="amount_invoiced"/>
+                                    </group>
+                                    <group name="payment_status_group">
+                                        <field name="amount_paid"/>
+                                        <field name="amount_due"/>
+                                        <field name="payment_status" widget="badge"/>
+                                    </group>
+                                </group>
+                                <div class="text-muted">
+                                    Amounts are computed from the linked Sales Order and its
+                                    standard invoices and payments. Create invoices from the Sales Order.
+                                </div>
+                            </page>
+                            <page name="notes" string="Notes">
+                                <field name="notes" placeholder="Internal notes about this booking..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <!-- Search -->
+        <record id="view_umrah_booking_search" model="ir.ui.view">
+            <field name="name">umrah.booking.search</field>
+            <field name="model">umrah.booking</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"
+                           filter_domain="['|', ('name', 'ilike', self), ('partner_id', 'ilike', self)]"/>
+                    <field name="partner_id"/>
+                    <field name="product_id"/>
+                    <filter name="my_bookings" string="My Bookings" domain="[('user_id', '=', uid)]"/>
+                    <filter name="departure_30d" string="Departure Next 30 Days"
+                            domain="[('departure_date', '&gt;=', context_today.strftime('%Y-%m-%d')),
+                                     ('departure_date', '&lt;=', (context_today + relativedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                    <separator/>
+                    <filter name="document_incomplete" string="Documents Incomplete"
+                            domain="[('document_progress', '&lt;', 100)]"/>
+                    <filter name="payment_overdue" string="Payment Overdue"
+                            domain="[('payment_status', '=', 'overdue')]"/>
+                    <separator/>
+                    <filter name="state_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                    <filter name="state_confirmed" string="Confirmed" domain="[('state', '=', 'confirmed')]"/>
+                    <filter name="state_document" string="Document" domain="[('state', '=', 'document')]"/>
+                    <filter name="state_visa" string="Visa" domain="[('state', '=', 'visa')]"/>
+                    <filter name="state_ready" string="Ready Departure" domain="[('state', '=', 'ready')]"/>
+                    <filter name="state_completed" string="Completed" domain="[('state', '=', 'completed')]"/>
+                    <group>
+                        <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                        <filter name="group_partner" string="Customer" context="{'group_by': 'partner_id'}"/>
+                        <filter name="group_product" string="Package" context="{'group_by': 'product_id'}"/>
+                        <filter name="group_departure_month" string="Departure Month"
+                                context="{'group_by': 'departure_date:month'}"/>
+                        <filter name="group_coordinator" string="Coordinator" context="{'group_by': 'user_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Activity -->
+        <record id="view_umrah_booking_activity" model="ir.ui.view">
+            <field name="name">umrah.booking.activity</field>
+            <field name="model">umrah.booking</field>
+            <field name="arch" type="xml">
+                <activity string="Umrah Bookings">
+                    <field name="name"/>
+                    <field name="partner_id"/>
+                    <field name="departure_date"/>
+                    <field name="state"/>
+                </activity>
+            </field>
+        </record>
+
+        <!-- Actions -->
+        <record id="action_umrah_booking" model="ir.actions.act_window">
+            <field name="name">Umrah Bookings</field>
+            <field name="res_model">umrah.booking</field>
+            <field name="view_mode">kanban,list,form,activity</field>
+            <field name="search_view_id" ref="view_umrah_booking_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first Umrah booking
+                </p>
+                <p>
+                    Confirm a sales order, then use "Create Umrah Booking" to open the wizard.
+                </p>
+            </field>
+        </record>
+
+        <record id="action_umrah_booking_dashboard" model="ir.actions.act_window">
+            <field name="name">Dashboard</field>
+            <field name="res_model">umrah.booking</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="search_view_id" ref="view_umrah_booking_search"/>
+            <field name="domain">[('state', '!=', 'cancelled')]</field>
+        </record>
+
+        <record id="action_umrah_booking_draft" model="ir.actions.act_window">
+            <field name="name">Draft</field>
+            <field name="res_model">umrah.booking</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="domain">[('state', '=', 'draft')]</field>
+        </record>
+
+        <record id="action_umrah_booking_confirmed" model="ir.actions.act_window">
+            <field name="name">Confirmed</field>
+            <field name="res_model">umrah.booking</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="domain">[('state', '=', 'confirmed')]</field>
+        </record>
+
+        <record id="action_umrah_booking_document" model="ir.actions.act_window">
+            <field name="name">Document</field>
+            <field name="res_model">umrah.booking</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="domain">[('state', 'in', ('document', 'verification'))]</field>
+        </record>
+
+        <record id="action_umrah_booking_visa" model="ir.actions.act_window">
+            <field name="name">Visa</field>
+            <field name="res_model">umrah.booking</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="domain">[('state', '=', 'visa')]</field>
+        </record>
+
+        <record id="action_umrah_booking_ready" model="ir.actions.act_window">
+            <field name="name">Ready Departure</field>
+            <field name="res_model">umrah.booking</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="domain">[('state', 'in', ('ready', 'departed'))]</field>
+        </record>
+
+        <record id="action_umrah_booking_completed" model="ir.actions.act_window">
+            <field name="name">Completed</field>
+            <field name="res_model">umrah.booking</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('state', 'in', ('returned', 'completed'))]</field>
+        </record>
+
+    </data>
+</odoo>

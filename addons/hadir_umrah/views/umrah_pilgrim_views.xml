@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- List -->
+        <record id="view_umrah_pilgrim_list" model="ir.ui.view">
+            <field name="name">umrah.pilgrim.list</field>
+            <field name="model">umrah.pilgrim</field>
+            <field name="arch" type="xml">
+                <list decoration-muted="state == 'cancelled'">
+                    <field name="full_name"/>
+                    <field name="booking_id"/>
+                    <field name="partner_id" optional="show"/>
+                    <field name="phone" optional="show"/>
+                    <field name="passport_number" optional="show"/>
+                    <field name="passport_expiry_date" optional="show"/>
+                    <field name="passport_expiry_status" widget="badge"
+                           decoration-success="passport_expiry_status == 'valid'"
+                           decoration-warning="passport_expiry_status == 'expiring'"
+                           decoration-danger="passport_expiry_status == 'expired'"
+                           optional="show"/>
+                    <field name="document_progress" widget="progressbar" optional="show"/>
+                    <field name="state" widget="badge"
+                           decoration-info="state == 'registered'"
+                           decoration-success="state in ('ready', 'departed', 'returned')"
+                           decoration-danger="state == 'cancelled'"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Form -->
+        <record id="view_umrah_pilgrim_form" model="ir.ui.view">
+            <field name="name">umrah.pilgrim.form</field>
+            <field name="model">umrah.pilgrim</field>
+            <field name="arch" type="xml">
+                <form string="Pilgrim">
+                    <header>
+                        <field name="state" widget="statusbar" statusbar_visible="registered,ready,departed,returned"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_create_partner" type="object" class="oe_stat_button"
+                                    icon="fa-address-card" invisible="partner_id">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Create Contact</span>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="full_name" placeholder="Full name..."/></h1>
+                        </div>
+                        <group>
+                            <group name="identity" string="Identity">
+                                <field name="booking_id"/>
+                                <field name="partner_id" invisible="not partner_id"/>
+                                <field name="nik" groups="hadir_umrah.group_umrah_user,hadir_umrah.group_umrah_visa"/>
+                                <field name="birth_place"/>
+                                <field name="birth_date"/>
+                                <field name="gender"/>
+                            </group>
+                            <group name="contact" string="Contact">
+                                <field name="phone"/>
+                                <field name="email"/>
+                                <field name="address"/>
+                            </group>
+                            <group name="passport" string="Passport">
+                                <field name="passport_name"/>
+                                <field name="passport_number"/>
+                                <field name="passport_issue_date"/>
+                                <field name="passport_issue_place"/>
+                                <field name="passport_expiry_date"/>
+                                <field name="passport_expiry_status" widget="badge"
+                                       decoration-danger="passport_expiry_status == 'expired'"
+                                       decoration-warning="passport_expiry_status == 'expiring'"/>
+                            </group>
+                            <group name="documents_group" string="Documents">
+                                <field name="document_required_count"/>
+                                <field name="document_verified_count"/>
+                                <field name="document_progress" widget="progressbar"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="documents" string="Documents">
+                                <field name="document_ids">
+                                    <list editable="bottom">
+                                        <field name="document_type_id"/>
+                                        <field name="required" widget="boolean_toggle"/>
+                                        <field name="state" widget="badge"
+                                               decoration-success="state == 'verified'"
+                                               decoration-danger="state in ('missing', 'rejected', 'expired')"
+                                               decoration-warning="state in ('submitted', 'verification')"/>
+                                        <field name="expiry_date" optional="show"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page name="notes" string="Notes">
+                                <field name="notes"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <!-- Search -->
+        <record id="view_umrah_pilgrim_search" model="ir.ui.view">
+            <field name="name">umrah.pilgrim.search</field>
+            <field name="model">umrah.pilgrim</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="full_name" filter_domain="['|', ('full_name', 'ilike', self), ('passport_number', 'ilike', self)]"/>
+                    <field name="booking_id"/>
+                    <field name="partner_id"/>
+                    <filter name="passport_risk" string="Passport At Risk"
+                            domain="[('passport_expiry_status', 'in', ('expiring', 'expired'))]"/>
+                    <filter name="documents_incomplete" string="Documents Incomplete"
+                            domain="[('document_progress', '&lt;', 100)]"/>
+                    <group>
+                        <filter name="group_booking" string="Booking" context="{'group_by': 'booking_id'}"/>
+                        <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                        <filter name="group_passport_status" string="Passport Status"
+                                context="{'group_by': 'passport_expiry_status'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Actions -->
+        <record id="action_umrah_pilgrim" model="ir.actions.act_window">
+            <field name="name">Jamaah</field>
+            <field name="res_model">umrah.pilgrim</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="view_umrah_pilgrim_search"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No pilgrims yet
+                </p>
+                <p>
+                    Pilgrims are usually created from the "Create Umrah Booking" wizard.
+                </p>
+            </field>
+        </record>
+
+        <record id="action_umrah_pilgrim_passport" model="ir.actions.act_window">
+            <field name="name">Passports</field>
+            <field name="res_model">umrah.pilgrim</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('passport_number', '!=', False)]</field>
+            <field name="context">{'search_default_group_passport_status': 1}</field>
+        </record>
+
+    </data>
+</odoo>

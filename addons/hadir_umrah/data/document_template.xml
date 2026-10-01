@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Document types -->
+        <record id="doc_type_passport" model="umrah.document.type">
+            <field name="name">Passport</field>
+            <field name="code">passport</field>
+            <field name="sequence">10</field>
+            <field name="has_expiry">True</field>
+        </record>
+        <record id="doc_type_ktp" model="umrah.document.type">
+            <field name="name">KTP</field>
+            <field name="code">ktp</field>
+            <field name="sequence">20</field>
+        </record>
+        <record id="doc_type_kk" model="umrah.document.type">
+            <field name="name">Kartu Keluarga</field>
+            <field name="code">kk</field>
+            <field name="sequence">30</field>
+        </record>
+        <record id="doc_type_photo" model="umrah.document.type">
+            <field name="name">Photo 4x6</field>
+            <field name="code">photo</field>
+            <field name="sequence">40</field>
+        </record>
+        <record id="doc_type_marriage_book" model="umrah.document.type">
+            <field name="name">Marriage Book (Buku Nikah)</field>
+            <field name="code">marriage_book</field>
+            <field name="sequence">50</field>
+        </record>
+        <record id="doc_type_vaccine" model="umrah.document.type">
+            <field name="name">Vaccine Certificate</field>
+            <field name="code">vaccine</field>
+            <field name="sequence">60</field>
+            <field name="has_expiry">True</field>
+        </record>
+        <record id="doc_type_visa" model="umrah.document.type">
+            <field name="name">Visa</field>
+            <field name="code">visa</field>
+            <field name="sequence">70</field>
+            <field name="has_expiry">True</field>
+        </record>
+        <record id="doc_type_ticket" model="umrah.document.type">
+            <field name="name">Ticket</field>
+            <field name="code">ticket</field>
+            <field name="sequence">80</field>
+        </record>
+
+        <!-- Template A: default (Paket Umroh A) -->
+        <record id="umrah_document_template_a" model="umrah.document.template">
+            <field name="name">Umrah Reguler - Default</field>
+            <field name="is_default">True</field>
+        </record>
+        <record id="tpl_a_passport" model="umrah.document.template.line">
+            <field name="template_id" ref="umrah_document_template_a"/>
+            <field name="document_type_id" ref="doc_type_passport"/>
+        </record>
+        <record id="tpl_a_ktp" model="umrah.document.template.line">
+            <field name="template_id" ref="umrah_document_template_a"/>
+            <field name="document_type_id" ref="doc_type_ktp"/>
+        </record>
+        <record id="tpl_a_kk" model="umrah.document.template.line">
+            <field name="template_id" ref="umrah_document_template_a"/>
+            <field name="document_type_id" ref="doc_type_kk"/>
+        </record>
+        <record id="tpl_a_photo" model="umrah.document.template.line">
+            <field name="template_id" ref="umrah_document_template_a"/>
+            <field name="document_type_id" ref="doc_type_photo"/>
+        </record>
+        <record id="tpl_a_vaccine" model="umrah.document.template.line">
+            <field name="template_id" ref="umrah_document_template_a"/>
+            <field name="document_type_id" ref="doc_type_vaccine"/>
+        </record>
+
+        <!-- Template B: family package adds marriage book (Paket Umroh B) -->
+        <record id="umrah_document_template_b" model="umrah.document.template">
+            <field name="name">Umrah Plus - Family</field>
+        </record>
+        <record id="tpl_b_passport" model="umrah.document.template.line">
+            <field name="template_id" ref="umrah_document_template_b"/>
+            <field name="document_type_id" ref="doc_type_passport"/>
+        </record>
+        <record id="tpl_b_ktp" model="umrah.document.template.line">
+            <field name="template_id" ref="umrah_document_template_b"/>
+            <field name="document_type_id" ref="doc_type_ktp"/>
+        </record>
+        <record id="tpl_b_kk" model="umrah.document.template.line">
+            <field name="template_id" ref="umrah_document_template_b"/>
+            <field name="document_type_id" ref="doc_type_kk"/>
+        </record>
+        <record id="tpl_b_photo" model="umrah.document.template.line">
+            <field name="template_id" ref="umrah_document_template_b"/>
+            <field name="document_type_id" ref="doc_type_photo"/>
+        </record>
+        <record id="tpl_b_vaccine" model="umrah.document.template.line">
+            <field name="template_id" ref="umrah_document_template_b"/>
+            <field name="document_type_id" ref="doc_type_vaccine"/>
+        </record>
+        <record id="tpl_b_marriage_book" model="umrah.document.template.line">
+            <field name="template_id" ref="umrah_document_template_b"/>
+            <field name="document_type_id" ref="doc_type_marriage_book"/>
+        </record>
+    </data>
+</odoo>

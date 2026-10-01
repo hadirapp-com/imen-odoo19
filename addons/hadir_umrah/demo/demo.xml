@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Customer -->
+        <record id="demo_partner_customer" model="res.partner">
+            <field name="name">Keluarga Ahmad Fauzi</field>
+            <field name="customer_rank">1</field>
+            <field name="phone">+62 811 100 2000</field>
+            <field name="email">ahmad.fauzi@example.com</field>
+        </record>
+
+        <!-- Packages -->
+        <record id="demo_product_a" model="product.template">
+            <field name="name">Paket Umroh A (9 Days)</field>
+            <field name="type">service</field>
+            <field name="invoice_policy">order</field>
+            <field name="list_price">35000000</field>
+            <field name="is_umrah_package">True</field>
+            <field name="document_template_id" ref="umrah_document_template_a"/>
+        </record>
+        <record id="demo_product_a_pp" model="product.product">
+            <field name="product_tmpl_id" ref="demo_product_a"/>
+        </record>
+
+        <record id="demo_product_b" model="product.template">
+            <field name="name">Paket Umroh B (12 Days, Family)</field>
+            <field name="type">service</field>
+            <field name="invoice_policy">order</field>
+            <field name="list_price">42000000</field>
+            <field name="is_umrah_package">True</field>
+            <field name="document_template_id" ref="umrah_document_template_b"/>
+        </record>
+        <record id="demo_product_b_pp" model="product.product">
+            <field name="product_tmpl_id" ref="demo_product_b"/>
+        </record>
+
+        <!-- Sales Order: 3 pax of Paket Umroh A -->
+        <record id="demo_sale_order" model="sale.order">
+            <field name="partner_id" ref="demo_partner_customer"/>
+        </record>
+        <record id="demo_so_line" model="sale.order.line">
+            <field name="order_id" ref="demo_sale_order"/>
+            <field name="product_id" ref="demo_product_a_pp"/>
+            <field name="product_uom_qty">3</field>
+        </record>
+        <function model="sale.order" name="action_confirm" eval="[[ref('demo_sale_order')]]"/>
+
+        <!-- Booking + 3 pilgrims, departure 15 January 2027 -->
+        <record id="demo_booking" model="umrah.booking">
+            <field name="partner_id" ref="demo_partner_customer"/>
+            <field name="sale_order_id" ref="demo_sale_order"/>
+            <field name="product_id" ref="demo_product_a"/>
+            <field name="departure_date">2027-01-15</field>
+            <field name="return_date">2027-01-24</field>
+        </record>
+
+        <record id="demo_pilgrim_1" model="umrah.pilgrim">
+            <field name="booking_id" ref="demo_booking"/>
+            <field name="full_name">Ahmad Fauzi</field>
+            <field name="gender">male</field>
+            <field name="birth_place">Jakarta</field>
+            <field name="birth_date">1980-04-12</field>
+            <field name="nik">3174011204800001</field>
+            <field name="phone">+62 811 100 2000</field>
+            <field name="email">ahmad.fauzi@example.com</field>
+            <field name="passport_number">X1234567</field>
+            <field name="passport_issue_date">2021-06-01</field>
+            <field name="passport_expiry_date">2031-05-31</field>
+        </record>
+
+        <record id="demo_pilgrim_2" model="umrah.pilgrim">
+            <field name="booking_id" ref="demo_booking"/>
+            <field name="full_name">Siti Rahmawati</field>
+            <field name="gender">female</field>
+            <field name="birth_place">Bandung</field>
+            <field name="birth_date">1983-09-25</field>
+            <field name="nik">3273012509830002</field>
+            <field name="phone">+62 811 100 2001</field>
+            <field name="passport_number">X2233445</field>
+            <field name="passport_issue_date">2019-03-15</field>
+            <field name="passport_expiry_date">2029-03-14</field>
+        </record>
+
+        <record id="demo_pilgrim_3" model="umrah.pilgrim">
+            <field name="booking_id" ref="demo_booking"/>
+            <field name="full_name">Budi Santoso</field>
+            <field name="gender">male</field>
+            <field name="birth_place">Surabaya</field>
+            <field name="birth_date">1975-01-30</field>
+            <field name="nik">3578013001750003</field>
+            <field name="phone">+62 811 100 2002</field>
+            <field name="passport_number">X9988776</field>
+            <field name="passport_issue_date">2026-02-01</field>
+            <field name="passport_expiry_date">2027-07-20</field>
+        </record>
+
+        <!-- Generate the document checklist from the package template -->
+        <function model="umrah.booking" name="action_generate_checklist" eval="[[ref('demo_booking')]]"/>
+
+    </data>
+</odoo>

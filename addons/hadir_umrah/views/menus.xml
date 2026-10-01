@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Root -->
+        <menuitem id="menu_umrah_root" name="Travel" sequence="12"
+                  web_icon="hadir_umrah,static/description/icon.png"
+                  groups="hadir_umrah.group_umrah_user,hadir_umrah.group_umrah_finance,hadir_umrah.group_umrah_visa"/>
+
+        <!-- Dashboard -->
+        <menuitem id="menu_umrah_dashboard" name="Dashboard" parent="menu_umrah_root"
+                  action="action_umrah_booking_dashboard" sequence="10"/>
+
+        <!-- Booking -->
+        <menuitem id="menu_umrah_booking" name="Booking" parent="menu_umrah_root" sequence="20"/>
+        <menuitem id="menu_umrah_booking_all" name="All Booking" parent="menu_umrah_booking"
+                  action="action_umrah_booking" sequence="10"/>
+        <menuitem id="menu_umrah_booking_draft" name="Draft" parent="menu_umrah_booking"
+                  action="action_umrah_booking_draft" sequence="20"/>
+        <menuitem id="menu_umrah_booking_confirmed" name="Confirmed" parent="menu_umrah_booking"
+                  action="action_umrah_booking_confirmed" sequence="30"/>
+        <menuitem id="menu_umrah_booking_document" name="Document" parent="menu_umrah_booking"
+                  action="action_umrah_booking_document" sequence="40"/>
+        <menuitem id="menu_umrah_booking_visa" name="Visa" parent="menu_umrah_booking"
+                  action="action_umrah_booking_visa" sequence="50"/>
+        <menuitem id="menu_umrah_booking_ready" name="Ready Departure" parent="menu_umrah_booking"
+                  action="action_umrah_booking_ready" sequence="60"/>
+        <menuitem id="menu_umrah_booking_completed" name="Completed" parent="menu_umrah_booking"
+                  action="action_umrah_booking_completed" sequence="70"/>
+
+        <!-- Jamaah -->
+        <menuitem id="menu_umrah_jamaah" name="Jamaah" parent="menu_umrah_root" sequence="30"/>
+        <menuitem id="menu_umrah_jamaah_all" name="All Jamaah" parent="menu_umrah_jamaah"
+                  action="action_umrah_pilgrim" sequence="10"/>
+        <menuitem id="menu_umrah_jamaah_document" name="Document" parent="menu_umrah_jamaah"
+                  action="action_umrah_document" sequence="20"/>
+        <menuitem id="menu_umrah_jamaah_passport" name="Passport" parent="menu_umrah_jamaah"
+                  action="action_umrah_pilgrim_passport" sequence="30"/>
+
+        <!-- Sales (standard Sales app actions) -->
+        <menuitem id="menu_umrah_sales" name="Sales" parent="menu_umrah_root" sequence="50"
+                  groups="hadir_umrah.group_umrah_user"/>
+        <menuitem id="menu_umrah_sales_quotations" name="Quotations" parent="menu_umrah_sales"
+                  action="sale.action_quotations" sequence="10"/>
+        <menuitem id="menu_umrah_sales_orders" name="Sales Orders" parent="menu_umrah_sales"
+                  action="sale.action_orders" sequence="20"/>
+
+        <!-- Configuration -->
+        <menuitem id="menu_umrah_config" name="Configuration" parent="menu_umrah_root" sequence="80"
+                  groups="hadir_umrah.group_umrah_user"/>
+
+        <record id="action_umrah_package" model="ir.actions.act_window">
+            <field name="name">Umrah Packages</field>
+            <field name="res_model">product.template</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('is_umrah_package', '=', True)]</field>
+            <field name="context">{'default_is_umrah_package': True}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first Umrah package
+                </p>
+                <p>
+                    Packages are plain Odoo products: sell them on a sales order, then
+                    create an Umrah booking from the confirmed order.
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_umrah_config_package" name="Umrah Package" parent="menu_umrah_config"
+                  action="action_umrah_package" sequence="10"/>
+        <menuitem id="menu_umrah_config_document_type" name="Document Type" parent="menu_umrah_config"
+                  action="action_umrah_document_type" sequence="20"/>
+        <menuitem id="menu_umrah_config_document_template" name="Document Template" parent="menu_umrah_config"
+                  action="action_umrah_document_template" sequence="30"/>
+
+    </data>
+</odoo>

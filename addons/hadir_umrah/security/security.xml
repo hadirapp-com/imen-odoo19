@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="module_category_umrah" model="ir.module.category">
+            <field name="name">Umrah Travel</field>
+            <field name="description">Access rights for the Umrah travel vertical solution.</field>
+            <field name="sequence">25</field>
+        </record>
+
+        <record id="privilege_umrah_travel" model="res.groups.privilege">
+            <field name="name">Umrah Travel</field>
+            <field name="category_id" ref="module_category_umrah"/>
+            <field name="sequence">25</field>
+            <field name="description">Access rights for the Umrah travel vertical solution.</field>
+        </record>
+
+        <record id="group_umrah_user" model="res.groups">
+            <field name="name">Travel / Admin</field>
+            <field name="privilege_id" ref="privilege_umrah_travel"/>
+            <field name="sequence">10</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Full operational access: bookings, pilgrims, documents, checklists.</field>
+        </record>
+
+        <record id="group_umrah_finance" model="res.groups">
+            <field name="name">Travel / Finance</field>
+            <field name="privilege_id" ref="privilege_umrah_travel"/>
+            <field name="sequence">20</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Read-only access to bookings, pilgrims and documents. Invoice and payment rights come from the standard Accounting groups.</field>
+        </record>
+
+        <record id="group_umrah_visa" model="res.groups">
+            <field name="name">Travel / Visa Officer</field>
+            <field name="privilege_id" ref="privilege_umrah_travel"/>
+            <field name="sequence">30</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Manages pilgrim documents; read-only on bookings and pilgrims.</field>
+        </record>
+
+        <record id="group_umrah_manager" model="res.groups">
+            <field name="name">Travel / Manager</field>
+            <field name="privilege_id" ref="privilege_umrah_travel"/>
+            <field name="sequence">40</field>
+            <field name="implied_ids" eval="[
+                (4, ref('group_umrah_user')),
+                (4, ref('group_umrah_finance')),
+                (4, ref('group_umrah_visa')),
+            ]"/>
+        </record>
+
+        <!-- Multi-company rules -->
+        <record id="rule_umrah_booking_company" model="ir.rule">
+            <field name="name">Umrah Booking: multi-company</field>
+            <field name="model_id" ref="model_umrah_booking"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_umrah_pilgrim_company" model="ir.rule">
+            <field name="name">Umrah Pilgrim: multi-company</field>
+            <field name="model_id" ref="model_umrah_pilgrim"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_umrah_document_company" model="ir.rule">
+            <field name="name">Umrah Document: multi-company</field>
+            <field name="model_id" ref="model_umrah_document"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_umrah_document_template_company" model="ir.rule">
+            <field name="name">Umrah Document Template: multi-company</field>
+            <field name="model_id" ref="model_umrah_document_template"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+    </data>
+</odoo>
