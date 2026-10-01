@@ -142,5 +142,17 @@
             <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
             <field name="domain_force">[('booking_id.pilgrim_ids.partner_id', '=', user.partner_id.id)]</field>
         </record>
+
+        <record id="rule_umrah_notification_company" model="ir.rule">
+            <field name="name">Umrah Notification: multi-company</field>
+            <field name="model_id" ref="model_umrah_notification"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_umrah_notification_template_company" model="ir.rule">
+            <field name="name">Umrah Notification Template: multi-company</field>
+            <field name="model_id" ref="model_umrah_notification_template"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
     </data>
 </odoo>

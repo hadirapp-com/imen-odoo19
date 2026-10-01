@@ -33,3 +33,7 @@ access_umrah_visa_portal,umrah.visa portal,model_umrah_visa,base.group_portal,1,
 access_umrah_manasik_portal,umrah.manasik portal,model_umrah_manasik,base.group_portal,1,0,0,0
 access_umrah_manasik_attendance_portal,umrah.manasik.attendance portal,model_umrah_manasik_attendance,base.group_portal,1,0,0,0
 access_umrah_flight_portal,umrah.flight portal,model_umrah_flight,base.group_portal,1,0,0,0
+access_umrah_notification_user,umrah.notification user,model_umrah_notification,group_umrah_user,1,1,1,0
+access_umrah_notification_finance,umrah.notification finance,model_umrah_notification,group_umrah_finance,1,0,0,0
+access_umrah_notification_visa,umrah.notification visa,model_umrah_notification,group_umrah_visa,1,0,0,0
+access_umrah_notification_template_user,umrah.notification.template user,model_umrah_notification_template,group_umrah_user,1,1,1,1

@@ -1,5 +1,6 @@
 from . import product_template
 from . import sale_order
+from . import res_company
 from . import umrah_document_type
 from . import umrah_document_template
 from . import umrah_document
@@ -9,3 +10,4 @@ from . import umrah_manasik
 from . import umrah_task_type
 from . import umrah_flight
 from . import umrah_booking
+from . import umrah_notification

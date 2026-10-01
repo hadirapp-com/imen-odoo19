@@ -48,6 +48,8 @@
                   action="action_umrah_manasik" sequence="20"/>
         <menuitem id="menu_umrah_operation_flight" name="Flight" parent="menu_umrah_operation"
                   action="action_umrah_flight" sequence="30"/>
+        <menuitem id="menu_umrah_operation_notifications" name="Notifications" parent="menu_umrah_operation"
+                  action="action_umrah_notification" sequence="40"/>
 
         <!-- Sales (standard Sales app actions) -->
         <menuitem id="menu_umrah_sales" name="Sales" parent="menu_umrah_root" sequence="50"
@@ -86,6 +88,8 @@
                   action="action_umrah_document_template" sequence="30"/>
         <menuitem id="menu_umrah_config_task_template" name="Task Template" parent="menu_umrah_config"
                   action="action_umrah_task_type" sequence="40"/>
+        <menuitem id="menu_umrah_config_notification_template" name="Notification Template" parent="menu_umrah_config"
+                  action="action_umrah_notification_template" sequence="50"/>
 
     </data>
 </odoo>

@@ -32,6 +32,10 @@ class UmrahManasik(models.Model):
     date = fields.Date(string='Date', required=True, index=True, tracking=True)
     start_time = fields.Float(string='Start Time', required=True, default=9.0)
     end_time = fields.Float(string='End Time', required=True, default=11.0)
+    time_label = fields.Char(
+        string='Time Range', compute='_compute_time_label',
+        help='Human-readable time range, usable in notification templates '
+             '(${object.time_label}).')
     location = fields.Char()
     trainer_id = fields.Many2one(
         'res.partner', string='Trainer', tracking=True,
@@ -71,6 +75,13 @@ class UmrahManasik(models.Model):
             manasik.attendee_count = len(manasik.attendance_ids)
             manasik.present_count = len(
                 manasik.attendance_ids.filtered(lambda line: line.attendance == 'present'))
+
+    @api.depends('start_time', 'end_time')
+    def _compute_time_label(self):
+        for manasik in self:
+            start = _float_to_hours_minutes(manasik.start_time)
+            end = _float_to_hours_minutes(manasik.end_time)
+            manasik.time_label = '%02d:%02d - %02d:%02d' % (start + end)
 
     def action_fill_attendees(self):
         """Add every pilgrim of the booking that has no attendance line yet."""

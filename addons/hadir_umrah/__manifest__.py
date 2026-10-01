@@ -1,6 +1,6 @@
 {
     'name': 'HadIr Umrah',
-    'summary': 'Vertical solution for Umrah travel: packages, bookings, pilgrims, documents, visas, manasik, portal',
+    'summary': 'Vertical solution for Umrah travel: packages, bookings, pilgrims, documents, visas, manasik, portal, notifications',
     'description': """
 Umrah Travel Vertical Solution
 ==============================
@@ -13,11 +13,13 @@ Phase 1 (Core MVP): bookings, pilgrims, documents, payment status.
 Phase 2 (Operation): visas, manasik, task automation, reminders, dashboard.
 Phase 3 (Portal): jamaah portal "My Umrah" with document upload,
 payment view, manasik schedule and flight information.
+Phase 4 (Automation): provider-agnostic WhatsApp notification queue
+with document, payment, manasik, visa and departure reminders.
 """,
     'author': 'HadirApp',
     'license': 'LGPL-3',
     'category': 'Services/Travel',
-    'version': '19.0.3.0.0',
+    'version': '19.0.4.0.0',
     'application': True,
     'installable': True,
     'depends': [
@@ -33,6 +35,7 @@ payment view, manasik schedule and flight information.
         'data/sequence.xml',
         'data/document_template.xml',
         'data/task_template.xml',
+        'data/notification_template.xml',
         'data/cron.xml',
         'views/umrah_booking_views.xml',
         'views/umrah_pilgrim_views.xml',
@@ -41,6 +44,7 @@ payment view, manasik schedule and flight information.
         'views/umrah_manasik_views.xml',
         'views/umrah_task_views.xml',
         'views/umrah_flight_views.xml',
+        'views/umrah_notification_views.xml',
         'views/product_views.xml',
         'views/sale_order_views.xml',
         'views/umrah_portal_templates.xml',

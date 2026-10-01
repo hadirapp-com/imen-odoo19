@@ -42,6 +42,8 @@
                                 invisible="state not in ('submitted', 'processing')"/>
                         <button name="action_reset" type="object" string="Reset to Draft"
                                 invisible="state not in ('rejected', 'expired')"/>
+                        <button name="action_notify_pilgrim" type="object" string="Notify Pilgrim"
+                                icon="fa-whatsapp"/>
                         <field name="state" widget="statusbar"
                                statusbar_visible="draft,submitted,processing,approved"/>
                     </header>

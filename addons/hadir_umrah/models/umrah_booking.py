@@ -89,6 +89,9 @@ class UmrahBooking(models.Model):
     task_open_count = fields.Integer(
         string='Open Tasks', compute='_compute_tasks', store=True)
 
+    notification_ids = fields.One2many('umrah.notification', 'booking_id', string='Notifications')
+    notification_count = fields.Integer(compute='_compute_tasks', store=True)
+
     payment_status = fields.Selection(
         selection=PAYMENT_STATES, string='Payment Status',
         compute='_compute_payment', store=True)
@@ -195,12 +198,13 @@ class UmrahBooking(models.Model):
             booking.manasik_count = len(booking.manasik_ids)
             booking.flight_count = len(booking.flight_ids)
 
-    @api.depends('task_ids')
+    @api.depends('task_ids', 'notification_ids')
     def _compute_tasks(self):
         for booking in self:
             booking.task_count = len(booking.task_ids)
             booking.task_open_count = len(booking.task_ids.filtered(
                 lambda task: not task.stage_id.fold))
+            booking.notification_count = len(booking.notification_ids)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -630,6 +634,17 @@ class UmrahBooking(models.Model):
                 'default_umrah_booking_id': self.id,
                 'default_project_id': self.project_id.id,
             },
+        }
+
+    def action_view_notifications(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Notifications'),
+            'res_model': 'umrah.notification',
+            'view_mode': 'list,form',
+            'domain': [('booking_id', '=', self.id)],
+            'context': {'default_booking_id': self.id},
         }
 
     def action_view_invoices(self):

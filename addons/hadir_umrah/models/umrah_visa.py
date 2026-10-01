@@ -37,6 +37,10 @@ class UmrahVisa(models.Model):
     state = fields.Selection(
         selection=VISA_STATES, string='Status',
         default='draft', required=True, copy=False, index=True, tracking=True)
+    state_label = fields.Char(
+        string='Status Label', compute='_compute_state_label',
+        help='Human-readable status, usable in notification templates '
+             '(${object.state_label}).')
     attachment_ids = fields.Many2many(
         'ir.attachment', string='Attachments',
         help='Visa scan or approval file.')
@@ -61,6 +65,23 @@ class UmrahVisa(models.Model):
         if self.pilgrim_id and not self.passport_number:
             self.passport_number = self.pilgrim_id.passport_number
 
+    @api.depends('state')
+    def _compute_state_label(self):
+        for visa in self:
+            visa.state_label = dict(VISA_STATES).get(visa.state, visa.state)
+
+    def action_notify_pilgrim(self):
+        for visa in self:
+            self.env['umrah.notification']._queue_event(
+                'visa_update', visa.booking_id, pilgrims=visa.pilgrim_id, visa=visa)
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Notifications'),
+            'res_model': 'umrah.notification',
+            'view_mode': 'list,form',
+            'domain': [('visa_id', 'in', self.ids)],
+        }
+
     def action_submit(self):
         for visa in self:
             if visa.state != 'draft':
@@ -84,6 +105,9 @@ class UmrahVisa(models.Model):
             'state': 'approved',
             'approval_date': fields.Date.context_today(self),
         })
+        for visa in self:
+            self.env['umrah.notification']._queue_event(
+                'visa_update', visa.booking_id, pilgrims=visa.pilgrim_id, visa=visa)
 
     def action_reject(self):
         for visa in self:

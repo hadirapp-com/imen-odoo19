@@ -60,5 +60,25 @@
             <field name="interval_type">days</field>
             <field name="active">True</field>
         </record>
+
+        <record id="ir_cron_queue_notifications" model="ir.cron">
+            <field name="name">Umrah: Queue Notifications</field>
+            <field name="model_id" ref="model_umrah_notification"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_queue_notifications()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="ir_cron_send_notifications" model="ir.cron">
+            <field name="name">Umrah: Send Notifications</field>
+            <field name="model_id" ref="model_umrah_notification"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_send_notifications()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="active">True</field>
+        </record>
     </data>
 </odoo>

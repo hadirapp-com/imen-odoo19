@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default WhatsApp templates (Indonesian). The rendering "object"
+             is: pilgrim for document/H-7/H-1, booking for payment, manasik
+             session for manasik, visa for visa update. -->
+        <record id="notif_tpl_document_reminder" model="umrah.notification.template">
+            <field name="name">Reminder: Kelengkapan Dokumen</field>
+            <field name="event_type">document_reminder</field>
+            <field name="body">Assalamu'alaikum ${object.full_name},
+
+Untuk keberangkatan Umrah booking ${object.booking_id.name} pada ${object.booking_id.departure_date}, kami masih menunggu kelengkapan dokumen Anda (kemajuan: ${object.document_progress}%).
+
+Mohon segera unggah dokumen yang belum lengkap melalui portal My Umrah, atau hubungi petugas kami.
+
+Jazakumullah khairan,
+${object.booking_id.company_id.name}</field>
+        </record>
+
+        <record id="notif_tpl_payment_reminder" model="umrah.notification.template">
+            <field name="name">Reminder: Pembayaran</field>
+            <field name="event_type">payment_reminder</field>
+            <field name="body">Assalamu'alaikum ${object.partner_id.name},
+
+Tagihan booking ${object.name} (${object.product_id.name}) masih memiliki sisa pembayaran ${object.amount_due} ${object.currency_id.name}.
+
+Total paket: ${object.amount_total} ${object.currency_id.name}
+Sudah dibayar: ${object.amount_paid} ${object.currency_id.name}
+
+Mohon segera lakukan pelunasan agar proses visa dan keberangkatan tidak terkendala.
+
+Terima kasih,
+${object.company_id.name}</field>
+        </record>
+
+        <record id="notif_tpl_manasik_reminder" model="umrah.notification.template">
+            <field name="name">Reminder: Jadwal Manasik</field>
+            <field name="event_type">manasik_reminder</field>
+            <field name="body">Assalamu'alaikum jamaah booking ${object.booking_id.name},
+
+Besok insyaAllah kita akan melaksanakan manasik:
+
+Acara: ${object.name}
+Waktu: ${object.date}, pukul ${object.time_label} WIB
+Lokasi: ${object.location}
+
+Mohon hadir tepat waktu. Bawa catatan pribadi Anda.
+
+Barakallahu fiikum,
+${object.booking_id.company_id.name}</field>
+        </record>
+
+        <record id="notif_tpl_visa_update" model="umrah.notification.template">
+            <field name="name">Update: Status Visa</field>
+            <field name="event_type">visa_update</field>
+            <field name="body">Assalamu'alaikum ${object.pilgrim_id.full_name},
+
+Update visa untuk booking ${object.booking_id.name}: visa Anda saat ini berstatus "${object.state_label}".
+
+Nomor paspor terdaftar: ${object.passport_number}
+
+Untuk informasi lebih lanjut silakan hubungi petugas kami.
+
+${object.booking_id.company_id.name}</field>
+        </record>
+
+        <record id="notif_tpl_departure_h7" model="umrah.notification.template">
+            <field name="name">Reminder: H-7 Keberangkatan</field>
+            <field name="event_type">departure_h7</field>
+            <field name="body">Assalamu'alaikum ${object.full_name},
+
+InsyaAllah keberangkatan Umrah Anda tinggal 7 hari lagi, pada ${object.booking_id.departure_date}.
+
+Mohon periksa kembali:
+- Paspor dan dokumen perjalanan
+- Koper dan perlengkapan ibadah
+- Pembayaran pelunasan
+
+Informasi keberangkatan lengkap tersedia di portal My Umrah.
+
+${object.booking_id.company_id.name}</field>
+        </record>
+
+        <record id="notif_tpl_departure_h1" model="umrah.notification.template">
+            <field name="name">Reminder: H-1 Keberangkatan</field>
+            <field name="event_type">departure_h1</field>
+            <field name="body">Assalamu'alaikum ${object.full_name},
+
+Besok adalah hari keberangkatan Umrah Anda (${object.booking_id.departure_date}).
+
+Point kumpul: ${object.booking_id.meeting_point or 'sesuai informasi petugas'}
+
+Mohon hadir lebih awal dengan paspor, tiket digital, dan identitas diri. Jangan lupa doa perjalanan.
+
+Selamat menunaikan ibadah Umrah,
+${object.booking_id.company_id.name}</field>
+        </record>
+    </data>
+</odoo>
