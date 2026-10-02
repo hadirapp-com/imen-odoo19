@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_recruitment_assessment" model="ir.module.category">
+        <field name="name">Recruitment Assessment</field>
+        <field name="sequence">60</field>
+    </record>
+
+    <record id="res_groups_privilege_recruitment_assessment" model="res.groups.privilege">
+        <field name="name">Recruitment Assessment</field>
+        <field name="category_id" ref="module_category_recruitment_assessment"/>
+        <field name="sequence">60</field>
+    </record>
+
+    <!-- User: reviews candidates, updates status and HR notes. -->
+    <record id="group_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="privilege_id" ref="res_groups_privilege_recruitment_assessment"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Can review candidate assessment results and update their status.</field>
+    </record>
+
+    <!-- Manager: full control, including deleting submissions. -->
+    <record id="group_manager" model="res.groups">
+        <field name="name">Manager</field>
+        <field name="privilege_id" ref="res_groups_privilege_recruitment_assessment"/>
+        <field name="implied_ids" eval="[(4, ref('group_user'))]"/>
+        <field name="comment">Full control over candidate assessment results.</field>
+    </record>
+
+    <record id="base.user_admin" model="res.users">
+        <field name="group_ids" eval="[(4, ref('group_manager'))]"/>
+    </record>
+</odoo>

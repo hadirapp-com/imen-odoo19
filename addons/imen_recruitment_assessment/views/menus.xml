@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_root" name="Recruitment Assessment" sequence="61"
+              groups="group_user"
+              web_icon="imen_recruitment_assessment,static/description/icon.png"/>
+
+    <menuitem id="menu_submissions" name="Candidates" parent="menu_root"
+              action="action_submission" sequence="10"/>
+
+    <menuitem id="menu_analysis" name="Analysis" parent="menu_root" sequence="20"/>
+    <menuitem id="menu_analysis_archetype" name="Archetype &amp; Readiness" parent="menu_analysis"
+              action="action_submission_analysis" sequence="10"/>
+    <menuitem id="menu_analysis_dimensions" name="Dimension Scores" parent="menu_analysis"
+              action="action_dimension_analysis" sequence="20"/>
+</odoo>

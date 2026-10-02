@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_submission_user,imen.recruitment.submission user,model_imen_recruitment_submission,group_user,1,1,0,0
+access_answer_user,imen.recruitment.answer user,model_imen_recruitment_answer,group_user,1,0,0,0
+access_dimension_user,imen.recruitment.dimension user,model_imen_recruitment_dimension,group_user,1,0,0,0
+access_submission_manager,imen.recruitment.submission manager,model_imen_recruitment_submission,group_manager,1,1,1,1
+access_answer_manager,imen.recruitment.answer manager,model_imen_recruitment_answer,group_manager,1,1,1,1
+access_dimension_manager,imen.recruitment.dimension manager,model_imen_recruitment_dimension,group_manager,1,1,1,1

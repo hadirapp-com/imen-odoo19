@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Submission -->
+    <record id="view_submission_list" model="ir.ui.view">
+        <field name="name">imen.recruitment.submission.list</field>
+        <field name="model">imen.recruitment.submission</field>
+        <field name="arch" type="xml">
+            <list create="0" decoration-muted="state == 'rejected'">
+                <field name="submitted_at"/>
+                <field name="name"/>
+                <field name="position"/>
+                <field name="primary_archetype"/>
+                <field name="secondary_archetype" optional="show"/>
+                <field name="readiness" avg="Average"/>
+                <field name="level" widget="badge"
+                       decoration-success="level == 'high_potential'"
+                       decoration-info="level == 'ready_with_supervision'"
+                       decoration-warning="level == 'developing'"
+                       decoration-danger="level == 'high_support_needed'"/>
+                <field name="character_score" optional="hide"/>
+                <field name="mental_score" optional="hide"/>
+                <field name="skill_score" optional="hide"/>
+                <field name="capacity_score" optional="hide"/>
+                <field name="risk_count" decoration-danger="risk_count > 0"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'interview'"
+                       decoration-success="state == 'hired'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_submission_form" model="ir.ui.view">
+        <field name="name">imen.recruitment.submission.form</field>
+        <field name="model">imen.recruitment.submission</field>
+        <field name="arch" type="xml">
+            <form create="0">
+                <header>
+                    <field name="state" widget="statusbar" options="{'clickable': '1'}"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                        <field name="position" readonly="1" placeholder="Position applied"/>
+                    </div>
+                    <group>
+                        <group string="Result">
+                            <field name="primary_archetype" readonly="1"/>
+                            <field name="secondary_archetype" readonly="1"/>
+                            <field name="level" readonly="1"/>
+                            <field name="readiness" readonly="1"/>
+                            <field name="submitted_at"/>
+                        </group>
+                        <group string="Composite Scores (1-5)">
+                            <field name="character_score" readonly="1"/>
+                            <field name="mental_score" readonly="1"/>
+                            <field name="skill_score" readonly="1"/>
+                            <field name="capacity_score" readonly="1"/>
+                            <field name="adaptability_score" readonly="1"/>
+                            <field name="commercial_score" readonly="1"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-warning" role="alert" invisible="not risk_notes">
+                        <strong>Perlu verifikasi:</strong>
+                        <field name="risk_notes" readonly="1" nolabel="1"/>
+                    </div>
+                    <div class="alert alert-success" role="alert" invisible="risk_notes">
+                        Tidak muncul red flag utama dari kuesioner. Tetap lakukan wawancara dan simulasi kerja sebelum keputusan akhir.
+                    </div>
+                    <notebook>
+                        <page string="HR Notes" name="hr_notes">
+                            <field name="hr_notes" placeholder="Catatan wawancara, simulasi kerja, keputusan..."/>
+                        </page>
+                        <page string="Dimension Scores" name="dimensions">
+                            <field name="dimension_ids" readonly="1">
+                                <list>
+                                    <field name="dimension"/>
+                                    <field name="score"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Answers" name="answers">
+                            <field name="answer_ids" readonly="1">
+                                <list>
+                                    <field name="sequence" string="#"/>
+                                    <field name="question_id"/>
+                                    <field name="dimension"/>
+                                    <field name="question_text"/>
+                                    <field name="reverse"/>
+                                    <field name="value"/>
+                                    <field name="score"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Technical" name="technical" groups="base.group_no_one">
+                            <group>
+                                <field name="user_agent" readonly="1"/>
+                                <field name="archetype_scores" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_submission_search" model="ir.ui.view">
+        <field name="name">imen.recruitment.submission.search</field>
+        <field name="model">imen.recruitment.submission</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="position"/>
+                <field name="primary_archetype"/>
+                <filter name="new" string="New" domain="[('state', '=', 'new')]"/>
+                <filter name="interview" string="Interview" domain="[('state', '=', 'interview')]"/>
+                <filter name="open" string="Open" domain="[('state', 'in', ('new', 'interview'))]"/>
+                <separator/>
+                <filter name="red_flags" string="Has Red Flags" domain="[('risk_count', '>', 0)]"/>
+                <filter name="high_potential" string="High Potential" domain="[('level', '=', 'high_potential')]"/>
+                <separator/>
+                <filter name="submitted_at" string="Submitted" date="submitted_at"/>
+                <filter name="group_position" string="Position" context="{'group_by': 'position'}"/>
+                <filter name="group_primary" string="Primary Archetype" context="{'group_by': 'primary_archetype'}"/>
+                <filter name="group_level" string="Work Readiness" context="{'group_by': 'level'}"/>
+                <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                <filter name="group_submitted_at" string="Submitted Date" context="{'group_by': 'submitted_at:day'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_submission_pivot" model="ir.ui.view">
+        <field name="name">imen.recruitment.submission.pivot</field>
+        <field name="model">imen.recruitment.submission</field>
+        <field name="arch" type="xml">
+            <pivot string="Archetype &amp; Readiness">
+                <field name="primary_archetype" type="row"/>
+                <field name="level" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_submission_graph" model="ir.ui.view">
+        <field name="name">imen.recruitment.submission.graph</field>
+        <field name="model">imen.recruitment.submission</field>
+        <field name="arch" type="xml">
+            <graph string="Archetype &amp; Readiness" type="bar" stacked="1">
+                <field name="primary_archetype"/>
+                <field name="level"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_submission" model="ir.actions.act_window">
+        <field name="name">Candidates</field>
+        <field name="res_model">imen.recruitment.submission</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="context">{'search_default_open': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No candidate assessments yet</p>
+            <p>Results arrive automatically when a candidate finishes the internal recruitment assessment on the IMEN landing page.</p>
+        </field>
+    </record>
+
+    <record id="action_submission_analysis" model="ir.actions.act_window">
+        <field name="name">Archetype &amp; Readiness</field>
+        <field name="res_model">imen.recruitment.submission</field>
+        <field name="view_mode">graph,pivot,list,form</field>
+    </record>
+
+    <!-- Dimension analysis -->
+    <record id="view_dimension_list" model="ir.ui.view">
+        <field name="name">imen.recruitment.dimension.list</field>
+        <field name="model">imen.recruitment.dimension</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0">
+                <field name="submitted_at"/>
+                <field name="submission_id"/>
+                <field name="position"/>
+                <field name="dimension"/>
+                <field name="score"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dimension_search" model="ir.ui.view">
+        <field name="name">imen.recruitment.dimension.search</field>
+        <field name="model">imen.recruitment.dimension</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="submission_id"/>
+                <field name="position"/>
+                <field name="dimension"/>
+                <filter name="submitted_at" string="Submitted" date="submitted_at"/>
+                <filter name="group_dimension" string="Dimension" context="{'group_by': 'dimension'}"/>
+                <filter name="group_position" string="Position" context="{'group_by': 'position'}"/>
+                <filter name="group_primary" string="Primary Archetype" context="{'group_by': 'primary_archetype'}"/>
+                <filter name="group_level" string="Work Readiness" context="{'group_by': 'level'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_dimension_pivot" model="ir.ui.view">
+        <field name="name">imen.recruitment.dimension.pivot</field>
+        <field name="model">imen.recruitment.dimension</field>
+        <field name="arch" type="xml">
+            <pivot string="Average Dimension Score">
+                <field name="dimension" type="row"/>
+                <field name="position" type="col"/>
+                <field name="score" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_dimension_graph" model="ir.ui.view">
+        <field name="name">imen.recruitment.dimension.graph</field>
+        <field name="model">imen.recruitment.dimension</field>
+        <field name="arch" type="xml">
+            <graph string="Average Dimension Score" type="bar">
+                <field name="dimension"/>
+                <field name="score" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_dimension_analysis" model="ir.actions.act_window">
+        <field name="name">Dimension Scores</field>
+        <field name="res_model">imen.recruitment.dimension</field>
+        <field name="view_mode">graph,pivot,list</field>
+    </record>
+</odoo>

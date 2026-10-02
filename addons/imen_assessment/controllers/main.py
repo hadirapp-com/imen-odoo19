@@ -86,21 +86,23 @@ def _validate(body):
     }
 
 
-class ImenAssessmentController(http.Controller):
+def cors_headers():
+    """CORS headers for a landing-page POST; also used by imen_recruitment_assessment."""
+    origin = request.httprequest.headers.get("Origin")
+    allowed = request.env["ir.config_parameter"].sudo().get_param(ALLOWED_ORIGINS_PARAM, "")
+    allowed = {o.strip() for o in allowed.split(",") if o.strip()}
+    if origin and origin in allowed:
+        return [
+            ("Access-Control-Allow-Origin", origin),
+            ("Access-Control-Allow-Methods", "POST, OPTIONS"),
+            ("Access-Control-Allow-Headers", "Content-Type"),
+            ("Access-Control-Max-Age", "86400"),
+            ("Vary", "Origin"),
+        ]
+    return [("Vary", "Origin")]
 
-    def _cors_headers(self):
-        origin = request.httprequest.headers.get("Origin")
-        allowed = request.env["ir.config_parameter"].sudo().get_param(ALLOWED_ORIGINS_PARAM, "")
-        allowed = {o.strip() for o in allowed.split(",") if o.strip()}
-        if origin and origin in allowed:
-            return [
-                ("Access-Control-Allow-Origin", origin),
-                ("Access-Control-Allow-Methods", "POST, OPTIONS"),
-                ("Access-Control-Allow-Headers", "Content-Type"),
-                ("Access-Control-Max-Age", "86400"),
-                ("Vary", "Origin"),
-            ]
-        return [("Vary", "Origin")]
+
+class ImenAssessmentController(http.Controller):
 
     @http.route(
         "/imen/assessment/submissions",
@@ -111,7 +113,7 @@ class ImenAssessmentController(http.Controller):
         save_session=False,
     )
     def submit(self, **kwargs):
-        headers = self._cors_headers()
+        headers = cors_headers()
         if request.httprequest.method == "OPTIONS":
             return request.make_response("", headers=headers, status=204)
 
