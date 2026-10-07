@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_subscription_plan_all,codeerts.subscription.plan.all,model_codeerts_subscription_plan,base.group_user,1,0,0,0
+access_subscription_plan_portal,codeerts.subscription.plan.portal,model_codeerts_subscription_plan,base.group_portal,1,0,0,0
+access_subscription_plan_manager,codeerts.subscription.plan.manager,model_codeerts_subscription_plan,group_subscription_manager,1,1,1,1
+access_subscription_revenue_projection,codeerts.subscription.revenue.projection.user,model_codeerts_subscription_revenue_projection,base.group_user,1,1,1,1
+access_subscription_log_user,codeerts.subscription.log.user,model_codeerts_subscription_log,group_subscription_user,1,0,0,0
+access_subscription_log_manager,codeerts.subscription.log.manager,model_codeerts_subscription_log,group_subscription_manager,1,1,1,1
+access_close_reason_all,codeerts.subscription.close.reason.all,model_codeerts_subscription_close_reason,base.group_user,1,0,0,0
+access_close_reason_manager,codeerts.subscription.close.reason.manager,model_codeerts_subscription_close_reason,group_subscription_manager,1,1,1,1
+access_close_wizard_user,codeerts.subscription.close.wizard.user,model_codeerts_subscription_close_wizard,group_subscription_user,1,1,1,1

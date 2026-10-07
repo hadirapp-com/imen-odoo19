@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_revenue_projection_list" model="ir.ui.view">
+        <field name="name">codeerts.subscription.revenue.projection.list</field>
+        <field name="model">codeerts.subscription.revenue.projection</field>
+        <field name="arch" type="xml">
+            <list string="Revenue Projection" create="0" edit="0" delete="0" default_order="period">
+                <field name="period"/>
+                <field name="date"/>
+                <field name="amount" widget="monetary" sum="Total projected"/>
+                <field name="cumulative" widget="monetary"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+</odoo>

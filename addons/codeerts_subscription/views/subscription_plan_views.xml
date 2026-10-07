@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_subscription_plan_list" model="ir.ui.view">
+        <field name="name">codeerts.subscription.plan.list</field>
+        <field name="model">codeerts.subscription.plan</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="billing_period_value"/>
+                <field name="billing_period_unit"/>
+                <field name="auto_close_limit"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_subscription_plan_form" model="ir.ui.view">
+        <field name="name">codeerts.subscription.plan.form</field>
+        <field name="model">codeerts.subscription.plan</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Monthly"/></h1>
+                    </div>
+                    <group>
+                        <group string="Recurrence">
+                            <label for="billing_period_value" string="Billing Period"/>
+                            <div class="o_row">
+                                <field name="billing_period_value" class="oe_inline"/>
+                                <field name="billing_period_unit" class="oe_inline"/>
+                            </div>
+                            <field name="billing_first_day"/>
+                            <field name="auto_close_limit"/>
+                        </group>
+                        <group string="Customer Self-Service">
+                            <field name="user_closable"/>
+                            <field name="user_closable_options" invisible="not user_closable"/>
+                            <field name="user_extend"/>
+                            <field name="user_quantity"/>
+                            <field name="pausable"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="invoice_mail_template_id"/>
+                        <field name="active" invisible="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_subscription_plan" model="ir.actions.act_window">
+        <field name="name">Subscription Plans</field>
+        <field name="res_model">codeerts.subscription.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first subscription plan</p>
+            <p>Plans define how often a subscription is billed (weekly, monthly, yearly).</p>
+        </field>
+    </record>
+</odoo>

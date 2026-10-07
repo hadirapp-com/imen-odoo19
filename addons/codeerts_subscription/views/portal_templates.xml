@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Breadcrumb entry -->
+    <template id="portal_my_home_menu_subscription" name="Portal Breadcrumb: Subscriptions"
+              inherit_id="portal.portal_breadcrumbs" priority="30">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'subscription'" class="breadcrumb-item active">
+                <a t-if="subscription" t-attf-href="/my/subscriptions?{{ keep_query() }}">Subscriptions</a>
+                <t t-else="">Subscriptions</t>
+            </li>
+        </xpath>
+    </template>
+
+    <!-- Home dashboard card -->
+    <template id="portal_my_home_subscription" name="Portal Home: Subscriptions"
+              inherit_id="portal.portal_my_home" priority="30" customize_show="True">
+        <div id="portal_client_category" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/codeerts_subscription/static/description/icon.png'"/>
+                <t t-set="title">Subscriptions</t>
+                <t t-set="url" t-value="'/my/subscriptions'"/>
+                <t t-set="text">View and manage your active subscriptions</t>
+                <t t-set="placeholder_count" t-value="'subscription_count'"/>
+            </t>
+        </div>
+    </template>
+
+    <!-- List page -->
+    <template id="portal_my_subscriptions" name="My Subscriptions">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Subscriptions</t>
+            </t>
+            <div t-if="not subscriptions" class="alert alert-warning" role="alert">
+                There are currently no subscriptions for your account.
+            </div>
+            <t t-if="subscriptions" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>Reference</th>
+                        <th>Plan</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Next Invoice</th>
+                        <th class="text-end">Recurring</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="subscriptions" t-as="sub">
+                        <td><a t-attf-href="/my/subscriptions/#{sub.id}"><t t-out="sub.name"/></a></td>
+                        <td><t t-out="sub.plan_id.name"/></td>
+                        <td class="text-center">
+                            <span t-attf-class="badge rounded-pill #{'text-bg-success' if sub.subscription_state == 'progress' else 'text-bg-secondary'}">
+                                <t t-out="dict(sub._fields['subscription_state']._description_selection(sub.env)).get(sub.subscription_state)"/>
+                            </span>
+                        </td>
+                        <td class="text-end"><span t-field="sub.next_invoice_date"/></td>
+                        <td class="text-end"><span t-field="sub.recurring_total"/></td>
+                    </tr>
+                </tbody>
+            </t>
+        </t>
+    </template>
+
+    <!-- Detail page -->
+    <template id="portal_subscription_page" name="Subscription Detail">
+        <t t-call="portal.portal_layout">
+            <t t-set="subscription" t-value="subscription"/>
+            <div class="row mt-3 mb-2 o_portal_html_view">
+                <div class="col-12">
+                    <h4>Subscription <span t-field="subscription.name"/>
+                        <span t-attf-class="badge rounded-pill #{'text-bg-success' if subscription.subscription_state == 'progress' else 'text-bg-secondary'} ms-2">
+                            <t t-out="dict(subscription._fields['subscription_state']._description_selection(subscription.env)).get(subscription.subscription_state)"/>
+                        </span>
+                    </h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">Plan</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Plan:</strong> <span t-field="subscription.plan_id.name"/></li>
+                                <li><strong>Start Date:</strong> <span t-field="subscription.start_date"/></li>
+                                <li><strong>Next Invoice:</strong> <span t-field="subscription.next_invoice_date"/></li>
+                                <li t-if="subscription.end_date"><strong>End Date:</strong> <span t-field="subscription.end_date"/></li>
+                                <li><strong>Recurring Amount:</strong> <span t-field="subscription.recurring_total"/></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">Manage</h6>
+                            <div t-if="subscription.subscription_state in ('progress', 'paused')">
+                                <form t-if="subscription.plan_id.pausable and subscription.subscription_state == 'progress'"
+                                      t-attf-action="/my/subscriptions/#{subscription.id}/pause" method="post" class="d-inline">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="access_token" t-att-value="token"/>
+                                    <button type="submit" class="btn btn-secondary btn-sm">Pause</button>
+                                </form>
+                                <form t-if="subscription.plan_id.user_closable"
+                                      t-attf-action="/my/subscriptions/#{subscription.id}/close" method="post" class="d-inline"
+                                      onsubmit="return confirm('Are you sure you want to close this subscription?');">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="access_token" t-att-value="token"/>
+                                    <button type="submit" class="btn btn-danger btn-sm">Close Subscription</button>
+                                </form>
+                                <p t-if="not subscription.plan_id.pausable and not subscription.plan_id.user_closable" class="text-muted mb-0">
+                                    Contact us to make changes to this subscription.
+                                </p>
+                            </div>
+                            <p t-else="" class="text-muted mb-0">This subscription is closed.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3" t-if="invoices">
+                <div class="col-12">
+                    <h6>Invoices</h6>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>Invoice</th><th class="text-end">Date</th><th class="text-center">Status</th><th class="text-end">Total</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="invoices" t-as="inv">
+                                <td><a t-att-href="inv.get_portal_url()"><t t-out="inv.name"/></a></td>
+                                <td class="text-end"><span t-field="inv.invoice_date"/></td>
+                                <td class="text-center"><span t-field="inv.payment_state"/></td>
+                                <td class="text-end"><span t-field="inv.amount_total"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

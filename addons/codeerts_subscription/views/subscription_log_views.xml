@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_subscription_log_list" model="ir.ui.view">
+        <field name="name">codeerts.subscription.log.list</field>
+        <field name="model">codeerts.subscription.log</field>
+        <field name="arch" type="xml">
+            <list string="Subscription MRR Logs" create="0" default_order="event_date desc, id desc">
+                <field name="event_date"/>
+                <field name="order_id"/>
+                <field name="partner_id"/>
+                <field name="event_type"/>
+                <field name="amount_signed" widget="monetary" sum="MRR change"/>
+                <field name="recurring_monthly" widget="monetary"/>
+                <field name="plan_id"/>
+                <field name="user_id" optional="hide"/>
+                <field name="team_id" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_subscription_log_search" model="ir.ui.view">
+        <field name="name">codeerts.subscription.log.search</field>
+        <field name="model">codeerts.subscription.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="order_id"/>
+                <field name="partner_id"/>
+                <field name="plan_id"/>
+                <filter name="new" string="New" domain="[('event_type', '=', '0_creation')]"/>
+                <filter name="expansion" string="Expansion" domain="[('event_type', '=', '1_expansion')]"/>
+                <filter name="churn" string="Churn" domain="[('event_type', '=', '3_churn')]"/>
+                <group>
+                    <filter name="group_event" string="Event" context="{'group_by': 'event_type'}"/>
+                    <filter name="group_plan" string="Plan" context="{'group_by': 'plan_id'}"/>
+                    <filter name="group_date" string="Date" context="{'group_by': 'event_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_subscription_log" model="ir.actions.act_window">
+        <field name="name">Subscription MRR Logs</field>
+        <field name="res_model">codeerts.subscription.log</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_subscription_log_search"/>
+    </record>
+</odoo>

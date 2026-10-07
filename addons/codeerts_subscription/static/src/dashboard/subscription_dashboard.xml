@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="codeerts_subscription.Dashboard">
+        <div t-att-class="props.className">
+        <div class="cz_sub_dash">
+            <div class="cz_dash_header">
+                <div class="cz_dash_title">
+                    <span>Dashboard</span>
+                </div>
+                <div class="cz_dash_filters">
+                    <div class="cz_filter_field" data-tooltip="Reporting period for the (period) metrics">
+                        <i class="fa fa-calendar" title="Period" role="img" aria-label="Period"/>
+                        <select t-model="state.filters.period" t-on-change="onPeriod">
+                            <option value="this_month">This month</option>
+                            <option value="last_30">Last 30 days</option>
+                            <option value="last_3m">Last 3 months</option>
+                            <option value="last_6m">Last 6 months</option>
+                            <option value="this_year">This year</option>
+                            <option value="last_12m">Last 12 months</option>
+                            <option value="all">All time</option>
+                            <option value="custom">Custom range...</option>
+                        </select>
+                    </div>
+                    <t t-if="state.filters.period === 'custom'">
+                        <div class="cz_filter_field" data-tooltip="Start of the custom range">
+                            <i class="fa fa-calendar" title="From" role="img" aria-label="From"/>
+                            <input type="date" t-model="state.filters.date_from"/>
+                        </div>
+                        <span class="cz_filter_arrow" title="to">&#8594;</span>
+                        <div class="cz_filter_field" data-tooltip="End of the custom range">
+                            <i class="fa fa-calendar-check-o" title="To" role="img" aria-label="To"/>
+                            <input type="date" t-model="state.filters.date_to"/>
+                        </div>
+                    </t>
+                    <div class="cz_filter_field" data-tooltip="Filter by recurring plan">
+                        <i class="fa fa-th-large" title="Plan" role="img" aria-label="Plan"/>
+                        <select t-model="state.filters.plan_id">
+                            <option value="">All Plans</option>
+                            <t t-if="state.data" t-foreach="state.data.filter_options.plans" t-as="p" t-key="p.id">
+                                <option t-att-value="p.id"><t t-out="p.name"/></option>
+                            </t>
+                        </select>
+                    </div>
+                    <div class="cz_filter_field" data-tooltip="Filter by sales team">
+                        <i class="fa fa-users" title="Team" role="img" aria-label="Team"/>
+                        <select t-model="state.filters.team_id">
+                            <option value="">All Teams</option>
+                            <t t-if="state.data" t-foreach="state.data.filter_options.teams" t-as="tm" t-key="tm.id">
+                                <option t-att-value="tm.id"><t t-out="tm.name"/></option>
+                            </t>
+                        </select>
+                    </div>
+                    <div class="cz_filter_field" data-tooltip="Filter by salesperson">
+                        <i class="fa fa-user-o" title="Salesperson" role="img" aria-label="Salesperson"/>
+                        <select t-model="state.filters.user_id">
+                            <option value="">All Salespeople</option>
+                            <t t-if="state.data" t-foreach="state.data.filter_options.users" t-as="u" t-key="u.id">
+                                <option t-att-value="u.id"><t t-out="u.name"/></option>
+                            </t>
+                        </select>
+                    </div>
+                    <button class="cz_btn_apply" t-on-click="apply">
+                        <i class="fa fa-bolt" title="Apply" role="img" aria-label="Apply"/><span>Apply</span>
+                    </button>
+                    <button class="cz_btn_reset" t-on-click="reset">
+                        <i class="fa fa-refresh" title="Reset" role="img" aria-label="Reset"/><span>Reset</span>
+                    </button>
+                </div>
+            </div>
+
+            <div t-if="state.loading" class="cz_dash_loading">
+                <i class="fa fa-circle-o-notch fa-spin fa-2x" title="Loading" role="img" aria-label="Loading"/>
+            </div>
+
+            <t t-if="!state.loading and state.data">
+                <div class="cz_dash_hint">
+                    <i class="fa fa-hand-pointer-o me-1" title="Interactive" role="img" aria-label="Interactive"/>
+                    Every tile, lane and chart is clickable. Click to open the underlying records.
+                </div>
+
+                <!-- KPI tiles (clickable) -->
+                <div class="cz_kpi_grid">
+                    <div class="cz_kpi cz_kpi_teal" data-tooltip-position="bottom" t-on-click="() => this.onKpi('mrr')"
+                         data-tooltip="Monthly Recurring Revenue: the normalized monthly value of all active subscriptions (weekly and yearly plans converted to a monthly figure). Click to open active subscriptions.">
+                        <div class="cz_kpi_label">Monthly Recurring Revenue</div>
+                        <div class="cz_kpi_value"><t t-out="fmt(state.data.kpis.mrr)"/></div>
+                        <div class="cz_kpi_sub">ARR <t t-out="fmt(state.data.kpis.arr)"/></div>
+                    </div>
+                    <div class="cz_kpi cz_kpi_navy" data-tooltip-position="bottom" t-on-click="() => this.onKpi('active')"
+                         data-tooltip="Subscriptions currently in progress (being billed). The sub-line shows how many are paused. Click to open them.">
+                        <div class="cz_kpi_label">Active Subscriptions</div>
+                        <div class="cz_kpi_value"><t t-out="state.data.kpis.active"/></div>
+                        <div class="cz_kpi_sub"><t t-out="state.data.kpis.paused"/> paused</div>
+                    </div>
+                    <div class="cz_kpi cz_kpi_green" data-tooltip-position="bottom" t-on-click="() => this.onKpi('new')"
+                         data-tooltip="New subscriptions that started within the selected date range. Click to see the creation events.">
+                        <div class="cz_kpi_label">New (period)</div>
+                        <div class="cz_kpi_value"><t t-out="state.data.kpis.new"/></div>
+                    </div>
+                    <div class="cz_kpi cz_kpi_red" data-tooltip-position="bottom" t-on-click="() => this.onKpi('churned')"
+                         data-tooltip="Subscriptions closed within the selected date range, plus the MRR lost to them. Click to see the churn events.">
+                        <div class="cz_kpi_label">Churned (period)</div>
+                        <div class="cz_kpi_value"><t t-out="state.data.kpis.churned"/></div>
+                        <div class="cz_kpi_sub"><t t-out="fmt(state.data.kpis.churn_mrr)"/> lost</div>
+                    </div>
+                    <div class="cz_kpi cz_kpi_indigo" data-tooltip-position="bottom" t-on-click="() => this.onKpi('arpu')"
+                         data-tooltip="Average Revenue Per User: MRR divided by the number of active subscriptions. Click to open active subscriptions.">
+                        <div class="cz_kpi_label">ARPU</div>
+                        <div class="cz_kpi_value"><t t-out="fmt(state.data.kpis.arpu)"/></div>
+                    </div>
+                    <div class="cz_kpi cz_kpi_amber" data-tooltip-position="bottom" t-on-click="() => this.onKpi('projected')"
+                         data-tooltip="Estimated revenue across all active subscriptions over their term (projected 12 months ahead when no end date is set), and their average age. Click to open active subscriptions.">
+                        <div class="cz_kpi_label">Projected Revenue</div>
+                        <div class="cz_kpi_value"><t t-out="fmt(state.data.kpis.expected_revenue)"/></div>
+                        <div class="cz_kpi_sub">avg <t t-out="state.data.kpis.avg_length"/> mo</div>
+                    </div>
+                </div>
+
+                <!-- Operational metrics (secondary row) -->
+                <div class="cz_kpi_grid cz_kpi_grid_sec">
+                    <div class="cz_kpi cz_kpi_slate" data-tooltip-position="bottom" t-on-click="() => this.onKpi('churn_rate')"
+                         data-tooltip="Percentage of subscriptions lost in the period: churned divided by (active + churned). Lower is better. Click to see the churn events.">
+                        <div class="cz_kpi_label">Churn Rate (period)</div>
+                        <div class="cz_kpi_value"><t t-out="state.data.kpis.churn_rate"/>%</div>
+                    </div>
+                    <div class="cz_kpi cz_kpi_teal" data-tooltip-position="bottom" t-on-click="() => this.onKpi('expansion')"
+                         data-tooltip="Extra recurring revenue gained from upsells during the selected period. Click to see the expansion events.">
+                        <div class="cz_kpi_label">Expansion MRR (period)</div>
+                        <div class="cz_kpi_value"><t t-out="fmt(state.data.kpis.expansion_mrr)"/></div>
+                    </div>
+                    <div class="cz_kpi cz_kpi_red" data-tooltip-position="bottom" t-on-click="() => this.onKpi('issues')"
+                         data-tooltip="Active subscriptions whose automatic payment failed. Billing is paused for them until resolved. Click to open them.">
+                        <div class="cz_kpi_label">Payment Issues</div>
+                        <div class="cz_kpi_value"><t t-out="state.data.kpis.payment_issues"/></div>
+                        <div class="cz_kpi_sub">need attention</div>
+                    </div>
+                    <div class="cz_kpi cz_kpi_amber" data-tooltip-position="bottom" t-on-click="() => this.onKpi('renewing')"
+                         data-tooltip="Active subscriptions whose next invoice falls due within the next 30 days. Click to open them.">
+                        <div class="cz_kpi_label">Renewing Soon</div>
+                        <div class="cz_kpi_value"><t t-out="state.data.kpis.renewing_soon"/></div>
+                        <div class="cz_kpi_sub">next 30 days</div>
+                    </div>
+                </div>
+
+                <!-- Swimlane (clickable) -->
+                <div class="cz_swimlane">
+                    <div t-foreach="state.data.swimlane" t-as="lane" t-key="lane.state" class="cz_lane"
+                         t-on-click="() => this.onLane(lane.state)">
+                        <div class="cz_lane_head" t-attf-style="border-color:{{lane.color}}">
+                            <span class="cz_lane_dot" t-attf-style="background:{{lane.color}}"/>
+                            <span class="cz_lane_name"><t t-out="lane.label"/></span>
+                        </div>
+                        <div class="cz_lane_count"><t t-out="lane.count"/></div>
+                        <div class="cz_lane_mrr"><t t-out="fmt(lane.mrr)"/> MRR</div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="cz_chart_grid">
+                    <div class="cz_chart_card">
+                        <div class="cz_chart_title">MRR Growth (12 months)</div>
+                        <div class="cz_chart_body"><canvas t-ref="trend"/></div>
+                    </div>
+                    <div class="cz_chart_card">
+                        <div class="cz_chart_title">Active Subscribers Trend (12 months)</div>
+                        <div class="cz_chart_body"><canvas t-ref="subsTrend"/></div>
+                    </div>
+                    <div class="cz_chart_card">
+                        <div class="cz_chart_title">New vs Churned (12 months)</div>
+                        <div class="cz_chart_body"><canvas t-ref="movementTrend"/></div>
+                    </div>
+                    <div class="cz_chart_card">
+                        <div class="cz_chart_title">MRR Movement (period) &#8226; click to drill down</div>
+                        <div class="cz_chart_body"><canvas t-ref="movement"/></div>
+                    </div>
+                    <div class="cz_chart_card">
+                        <div class="cz_chart_title">Revenue by Plan &#8226; click a slice</div>
+                        <div class="cz_chart_body"><canvas t-ref="byPlan"/></div>
+                    </div>
+                    <div class="cz_chart_card">
+                        <div class="cz_chart_title">Top Customers by MRR &#8226; click a bar</div>
+                        <div class="cz_chart_body"><canvas t-ref="topCust"/></div>
+                    </div>
+                </div>
+            </t>
+        </div>
+        </div>
+    </t>
+</templates>

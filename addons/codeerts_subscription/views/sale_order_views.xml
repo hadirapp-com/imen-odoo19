@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_subscription" model="ir.ui.view">
+        <field name="name">sale.order.form.subscription</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Manual "Generate Invoice" + lifecycle buttons for a subscription. -->
+            <button name="action_confirm" position="after">
+                <!-- Highlighted only when a recurring invoice is actually due; otherwise a plain
+                     button (still clickable to confirm nothing is due). -->
+                <button name="action_subscription_generate_invoice" type="object"
+                        string="Generate Invoice" class="btn-primary"
+                        invisible="not is_subscription or subscription_state != 'progress' or not recurring_invoice_due"/>
+                <button name="action_subscription_generate_invoice" type="object"
+                        string="Generate Invoice"
+                        invisible="not is_subscription or subscription_state != 'progress' or recurring_invoice_due"/>
+                <button name="action_subscription_pause" type="object"
+                        string="Pause" class="btn-secondary"
+                        invisible="not is_subscription or subscription_state != 'progress'"/>
+                <button name="action_subscription_resume" type="object"
+                        string="Resume" class="btn-secondary"
+                        invisible="not is_subscription or subscription_state != 'paused'"/>
+                <button name="action_subscription_close" type="object"
+                        string="Close" class="btn-secondary"
+                        invisible="not is_subscription or subscription_state not in ('progress', 'paused')"/>
+                <button name="action_subscription_reopen" type="object"
+                        string="Reopen" class="btn-secondary"
+                        invisible="not is_subscription or subscription_state != 'churn'"/>
+                <button name="action_subscription_renew" type="object"
+                        string="Renew" class="btn-secondary"
+                        invisible="not is_subscription or subscription_state != 'progress'"/>
+                <button name="action_subscription_upsell" type="object"
+                        string="Upsell" class="btn-secondary"
+                        invisible="not is_subscription or subscription_state != 'progress'"/>
+                <button name="action_subscription_retry_payment" type="object"
+                        string="Retry Payment" class="btn-warning"
+                        invisible="not payment_exception"/>
+            </button>
+
+            <!-- Hide the standard "Create Invoice" buttons on subscriptions: recurring billing
+                 goes exclusively through "Generate Invoice" / the daily cron. -->
+            <xpath expr="//button[@id='create_invoice']" position="attributes">
+                <attribute name="invisible">invoice_status != 'to invoice' or is_subscription</attribute>
+            </xpath>
+            <xpath expr="//button[@id='create_invoice_percentage']" position="attributes">
+                <attribute name="invisible">invoice_status != 'no' or state != 'sale' or is_subscription</attribute>
+            </xpath>
+
+            <!-- Payment-exception banner. -->
+            <div name="button_box" position="after">
+                <div class="alert alert-warning" role="alert" invisible="not payment_exception">
+                    Automatic payment failed. Recurring billing is paused for this subscription until the payment succeeds. Click "Retry Payment" once the issue is resolved.
+                </div>
+            </div>
+
+            <!-- Projected-revenue smart button: lifetime value over the subscription term. -->
+            <div name="button_box" position="inside">
+                <button type="object" name="action_revenue_projection"
+                        class="oe_stat_button" icon="fa-line-chart"
+                        invisible="not is_subscription">
+                    <field name="expected_revenue" widget="statinfo" string="Projected Revenue"/>
+                </button>
+                <button type="object" name="action_view_subscription_children"
+                        class="oe_stat_button" icon="fa-refresh"
+                        invisible="subscription_child_count == 0">
+                    <field name="subscription_child_count" widget="statinfo" string="Renewals/Upsells"/>
+                </button>
+            </div>
+
+            <!-- Subscription fields live in the header (right column, next to Payment Terms). -->
+            <group name="order_details" position="inside">
+                <field name="is_subscription" invisible="1"/>
+                <field name="recurring_invoice_due" invisible="1"/>
+                <field name="subscription_child_count" invisible="1"/>
+                <field name="plan_id"/>
+                <field name="subscription_state" widget="badge"
+                       invisible="not is_subscription and subscription_state not in ('upsell',)"/>
+                <field name="subscription_id" invisible="not subscription_id"
+                       string="Parent Subscription"/>
+                <field name="start_date" invisible="not is_subscription"/>
+                <field name="next_invoice_date" invisible="not is_subscription"/>
+                <field name="end_date" invisible="not is_subscription"/>
+                <field name="close_reason_id" invisible="subscription_state != 'churn'"
+                       options="{'no_create': True}"/>
+                <field name="payment_exception" invisible="1"/>
+                <field name="payment_token_id" invisible="not is_subscription"
+                       options="{'no_create': True}"/>
+                <field name="recurring_total" widget="monetary" invisible="not is_subscription"/>
+                <field name="recurring_monthly" widget="monetary" invisible="not is_subscription"/>
+            </group>
+        </field>
+    </record>
+
+    <record id="action_subscription_order" model="ir.actions.act_window">
+        <field name="name">Subscriptions</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_subscription', '=', True)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first subscription</p>
+            <p>A subscription is a sales order with a recurring plan. Pick a plan in the header of a quotation.</p>
+        </field>
+    </record>
+</odoo>

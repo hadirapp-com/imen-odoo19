@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_subscription_dashboard" model="ir.actions.client">
+        <field name="name">Subscriptions Dashboard</field>
+        <field name="tag">codeerts_subscription_dashboard</field>
+    </record>
+
+    <menuitem id="menu_subscription_dashboard"
+              name="Dashboard"
+              parent="menu_subscription_root"
+              action="action_subscription_dashboard"
+              sequence="5"/>
+</odoo>
