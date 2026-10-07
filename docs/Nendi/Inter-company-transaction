@@ -1,0 +1,2745 @@
+# ROLE
+
+You are a **Senior Odoo 19 Community Solution Architect, Senior Odoo Python Developer, ERP Integration Specialist, and Multi-Company Accounting System Architect**.
+
+You have deep expertise in:
+
+- Odoo 19 Community
+- Odoo ORM
+- Python
+- PostgreSQL
+- XML Views
+- Security / Access Rights / Record Rules
+- Multi-Company Architecture
+- Sales
+- Purchase
+- Accounting / Invoicing
+- Contacts
+- Product Management
+- Tax and Fiscal Position
+- Currency
+- Intercompany Transaction Architecture
+- Integration Design
+- Idempotent Transaction Processing
+- Audit Trail
+- ERP Workflow
+- Odoo Module Development
+- Automated Testing
+
+Your task is to design a **production-ready custom Odoo 19 Community module** for intercompany transactions.
+
+---
+
+# IMPORTANT ENVIRONMENT CONSTRAINT
+
+The target system is:
+
+> **ODOO 19 COMMUNITY EDITION**
+
+NOT Odoo Enterprise.
+
+Do NOT assume that any Odoo Enterprise-only intercompany automation exists.
+
+Do NOT use Enterprise-only modules or APIs.
+
+Do NOT instruct the developer to install or depend on Enterprise modules.
+
+The solution must work with:
+
+- Odoo 19 Community
+- Standard Community modules
+- Custom modules developed specifically for this project
+
+The architecture must clearly distinguish:
+
+1. What Odoo 19 Community already provides natively
+2. What must be developed as custom functionality
+3. What can be reused from standard Odoo models
+4. What should NOT be duplicated because Odoo already provides the functionality
+
+---
+
+# BUSINESS CONTEXT
+
+There are two companies inside the same Odoo 19 Community database.
+
+## Company A
+
+**PT Kalimasada Indonesia**
+
+This company acts as the purchasing company.
+
+## Company B
+
+**imen.co.id**
+
+This company acts as the selling company.
+
+Both companies exist inside the same Odoo database using Odoo Multi-Company.
+
+The business requirement is to create an integrated intercompany transaction flow.
+
+---
+
+# MAIN BUSINESS FLOW
+
+The desired business flow is:
+
+```text
+PT Kalimasada Indonesia
+        │
+        │ 1. Create Purchase RFQ
+        ▼
+Purchase RFQ
+        │
+        │ 2. Submit / Send to imen.co.id
+        ▼
+Intercompany Transaction Bridge
+        │
+        ▼
+imen.co.id
+        │
+        │ 3. Incoming RFQ / Sales Transaction
+        ▼
+Sales Quotation
+        │
+        │ 4. Sales Team Reviews
+        ▼
+Sales Order
+        │
+        │ 5. Invoice
+        ▼
+Customer Invoice
+        │
+        │ 6. Intercompany Invoice Bridge
+        ▼
+PT Kalimasada Indonesia
+        │
+        ▼
+Vendor Bill
+        │
+        │ 7. Accounting Review
+        ▼
+Vendor Bill Posted
+        │
+        ▼
+Payment
+```
+
+The system must provide complete traceability across both companies.
+
+---
+
+# TWO-WAY TRACEABILITY
+
+The following documents must be linked:
+
+```text
+Purchase RFQ
+      ↕
+Intercompany RFQ Bridge
+      ↕
+Sales Quotation
+      ↕
+Sales Order
+      ↕
+Customer Invoice
+      ↕
+Intercompany Invoice Bridge
+      ↕
+Vendor Bill
+```
+
+Users should be able to navigate between related documents using smart buttons and/or links.
+
+For example:
+
+From Purchase RFQ:
+
+- Sales Quotation
+- Sales Order
+- Customer Invoice
+- Vendor Bill
+- Intercompany Transaction
+- Sync Log
+
+From Sales Quotation:
+
+- Purchase RFQ
+- Intercompany Transaction
+
+From Sales Order:
+
+- Purchase RFQ
+- Customer Invoice
+- Vendor Bill
+- Intercompany Transaction
+
+From Customer Invoice:
+
+- Sales Order
+- Purchase RFQ
+- Vendor Bill
+- Intercompany Transaction
+- Sync Log
+
+From Vendor Bill:
+
+- Customer Invoice
+- Sales Order
+- Purchase RFQ
+- Intercompany Transaction
+- Sync Log
+
+---
+
+# CORE PRINCIPLE
+
+The architecture must follow this rule:
+
+> **NATIVE ODOO FIRST — CUSTOM ONLY FOR THE GAP**
+
+Do not rebuild standard Odoo functionality.
+
+For example:
+
+If Odoo 19 Community already provides:
+
+- Purchase RFQ
+- Purchase Order
+- Sales Quotation
+- Sales Order
+- Customer Invoice
+- Vendor Bill
+- Contacts
+- Products
+- Taxes
+- Currencies
+- Payment Terms
+- Accounting entries
+
+then use those native models.
+
+The custom module should act as:
+
+- Intercompany orchestrator
+- Mapping engine
+- Transaction bridge
+- Synchronization engine
+- Traceability layer
+- Validation layer
+- Audit layer
+- Error/retry layer
+
+It should NOT unnecessarily replace native Odoo Sales, Purchase, or Accounting.
+
+---
+
+# IMPORTANT ENTERPRISE VS COMMUNITY ANALYSIS
+
+Before proposing the architecture, explicitly analyze which intercompany capabilities are actually available in:
+
+> Odoo 19 Community
+
+Do NOT assume the following Enterprise functionality exists:
+
+- automatic Create Sales Orders
+- automatic Create Purchase Orders
+- automatic Create Vendor Bills
+- automatic intercompany stock synchronization
+- Enterprise intercompany transaction engine
+
+If these are not available in Community, explicitly classify them as:
+
+> CUSTOM REQUIRED
+
+Do not attempt to activate or call Enterprise-only functionality.
+
+---
+
+# MODULE NAME
+
+Evaluate the following naming options:
+
+Option A:
+
+```text
+hadir_intercompany_rfq
+```
+
+Option B:
+
+```text
+hadir_intercompany_transaction
+```
+
+Because the scope now covers:
+
+- RFQ
+- Sales Quotation
+- Sales Order
+- Customer Invoice
+- Vendor Bill
+- Payment Status
+- Traceability
+
+prefer:
+
+```text
+hadir_intercompany_transaction
+```
+
+unless Architecture Review proves another name is more appropriate.
+
+---
+
+# COMPANY STRUCTURE
+
+The module must support multiple company pairs.
+
+Do NOT hard-code:
+
+```text
+PT Kalimasada Indonesia
+imen.co.id
+```
+
+into Python logic.
+
+The companies are examples/configuration.
+
+The architecture must support:
+
+```text
+Company A → Company B
+Company B → Company C
+Company C → Company D
+```
+
+without rewriting the module.
+
+---
+
+# INTERCOMPANY ROUTING CONFIGURATION
+
+Create a configurable intercompany routing mechanism.
+
+Possible model:
+
+```text
+intercompany.route
+```
+
+Example fields:
+
+```text
+name
+source_company_id
+target_company_id
+active
+
+purchase_to_sale_enabled
+sale_to_purchase_enabled
+
+invoice_to_bill_enabled
+
+auto_create_sale_quotation
+auto_confirm_sale_order
+auto_create_invoice
+auto_create_vendor_bill
+
+product_mapping_required
+partner_mapping_required
+tax_mapping_required
+currency_conversion_enabled
+
+payment_status_sync_enabled
+attachment_sync_enabled
+```
+
+Do not implement every field blindly.
+
+During Architecture Review, determine the minimum correct configuration model.
+
+---
+
+# END-TO-END TRANSACTION
+
+The preferred transaction sequence is:
+
+## STEP 1 — PURCHASE RFQ
+
+Company A:
+
+```text
+PT Kalimasada Indonesia
+```
+
+creates:
+
+```text
+purchase.order
+```
+
+in RFQ state.
+
+Example:
+
+```text
+RFQ/00001
+Vendor = imen.co.id
+Product = Product A
+Quantity = 10
+Price = 100,000
+Currency = IDR
+```
+
+The RFQ must remain a real native Odoo Purchase RFQ.
+
+---
+
+# STEP 2 — INTERCOMPANY BRIDGE
+
+When configured conditions are satisfied, the custom module creates an intercompany transaction record.
+
+Example:
+
+```text
+intercompany.transaction
+```
+
+Suggested fields:
+
+```text
+name
+source_company_id
+target_company_id
+
+source_purchase_order_id
+target_sale_order_id
+
+source_sale_order_id
+target_purchase_order_id
+
+source_invoice_id
+target_vendor_bill_id
+
+transaction_type
+state
+sync_state
+
+integration_key
+
+last_sync_date
+last_sync_user_id
+
+sync_error
+retry_count
+```
+
+Do not blindly implement every field.
+
+Design the final model during Architecture Review.
+
+---
+
+# STEP 3 — CREATE SALES QUOTATION
+
+The system creates a native:
+
+```text
+sale.order
+```
+
+in Company B.
+
+Initially it should normally be:
+
+```text
+Quotation
+```
+
+and not automatically confirmed unless the configured business rule explicitly allows automatic confirmation.
+
+The Sales Team at imen.co.id must be able to review:
+
+- Customer
+- Products
+- Quantity
+- Price
+- Requested date
+- Payment terms
+- Currency
+- Notes
+- Source RFQ
+- Intercompany reference
+
+---
+
+# STEP 4 — SALES QUOTATION STATUS
+
+The source Purchase RFQ must be able to see the status of the corresponding Sales Quotation.
+
+Possible status:
+
+```text
+Not Created
+Quotation Created
+Quotation Sent
+Quotation Confirmed
+Quotation Cancelled
+Error
+```
+
+Do not create a duplicate fake quotation status if native Odoo state can be read.
+
+Use computed/related logic where appropriate.
+
+---
+
+# STEP 5 — SALES ORDER
+
+When the Sales Quotation is confirmed:
+
+```text
+sale.order
+```
+
+becomes the actual Sales Order.
+
+The source Purchase RFQ must be able to identify:
+
+```text
+Sales Order
+```
+
+and its status.
+
+Example:
+
+```text
+Purchase RFQ
+   ↓
+Sales Quotation
+   ↓
+Sales Order
+```
+
+---
+
+# STEP 6 — CUSTOMER INVOICE
+
+The selling company:
+
+```text
+imen.co.id
+```
+
+creates the native Odoo customer invoice:
+
+```text
+account.move
+```
+
+with:
+
+```text
+move_type = out_invoice
+```
+
+The invoice must retain links to:
+
+- Sales Order
+- Purchase RFQ
+- Intercompany Transaction
+- Target Company
+
+---
+
+# IMPORTANT INVOICE RULE
+
+Do NOT treat a draft invoice as equivalent to a posted invoice.
+
+Explicitly distinguish:
+
+```text
+Invoice Draft
+Invoice Posted
+Invoice Cancelled
+Credit Note
+```
+
+The architecture must define exactly when the invoice becomes eligible to create the vendor bill.
+
+Recommended default:
+
+```text
+Customer Invoice
+      │
+      ├── Draft
+      │     └── No Vendor Bill yet
+      │
+      └── Posted
+            │
+            ▼
+      Intercompany Invoice Bridge
+            │
+            ▼
+      Vendor Bill
+```
+
+The system must NOT create a financial vendor bill prematurely from an unposted invoice unless explicitly configured.
+
+---
+
+# STEP 7 — INVOICE → VENDOR BILL
+
+This is a critical requirement.
+
+Company B:
+
+```text
+imen.co.id
+```
+
+has:
+
+```text
+Customer Invoice
+```
+
+Company A:
+
+```text
+PT Kalimasada Indonesia
+```
+
+must receive/create:
+
+```text
+Vendor Bill
+```
+
+using native Odoo:
+
+```text
+account.move
+```
+
+with:
+
+```text
+move_type = in_invoice
+```
+
+The Vendor Bill must be a real accounting document.
+
+Do NOT create a fake custom document that only looks like a vendor bill.
+
+---
+
+# VENDOR BILL TRACEABILITY
+
+The Vendor Bill should contain traceability to:
+
+```text
+Source Company
+Source Customer Invoice
+Source Sales Order
+Source Purchase RFQ
+Intercompany Transaction
+```
+
+Recommended smart buttons:
+
+```text
+Customer Invoice
+Sales Order
+Purchase RFQ
+Intercompany Transaction
+Sync Log
+```
+
+---
+
+# INVOICE ↔ VENDOR BILL RELATIONSHIP
+
+The system must prevent:
+
+```text
+Invoice #INV/0001
+```
+
+from creating:
+
+```text
+Vendor Bill #BILL/0001
+Vendor Bill #BILL/0002
+Vendor Bill #BILL/0003
+```
+
+when synchronization runs multiple times.
+
+There must be exactly one logical target Vendor Bill per source invoice for a specific intercompany route.
+
+---
+
+# IDEMPOTENCY
+
+This is a mandatory requirement.
+
+The system must be safe if:
+
+- user clicks Sync twice
+- cron runs twice
+- transaction is retried
+- worker restarts
+- network/API process retries
+- user manually retries after an error
+
+Example:
+
+```text
+Source Invoice:
+INV/0001
+
+First synchronization:
+→ Vendor Bill created
+
+Second synchronization:
+→ DO NOT create another Vendor Bill
+→ Update existing relationship
+```
+
+Create a unique integration key.
+
+Example concept:
+
+```text
+source_company_id
+source_document_type
+source_document_id
+target_company_id
+transaction_type
+```
+
+Use a proper database-level uniqueness strategy where appropriate.
+
+---
+
+# PRODUCT MAPPING
+
+Do not assume Product IDs are identical across companies.
+
+Analyze Odoo 19 Community product behavior.
+
+Support mapping such as:
+
+```text
+Company A Product
+        ↓
+Intercompany Product Mapping
+        ↓
+Company B Product
+```
+
+Potential model:
+
+```text
+intercompany.product.mapping
+```
+
+Possible fields:
+
+```text
+source_company_id
+source_product_id
+target_company_id
+target_product_id
+active
+```
+
+Determine during Architecture Review whether this custom mapping is actually necessary given Odoo's shared product architecture.
+
+Do not create unnecessary mapping.
+
+---
+
+# PARTNER MAPPING
+
+Analyze Odoo's shared Contacts architecture.
+
+A company can act as:
+
+```text
+Customer
+Vendor
+```
+
+depending on transaction context.
+
+Determine whether the same `res.partner` can safely be used between companies.
+
+If a mapping layer is necessary, design:
+
+```text
+intercompany.partner.mapping
+```
+
+Do not blindly duplicate contacts.
+
+---
+
+# TAX MAPPING
+
+This is a critical accounting requirement.
+
+Do NOT copy Tax IDs blindly between companies.
+
+Example:
+
+```text
+Company A Tax ID 17
+```
+
+does NOT necessarily mean:
+
+```text
+Company B Tax ID 17
+```
+
+The system must support configurable tax mapping where required.
+
+Example:
+
+```text
+Source Tax
+    ↓
+Intercompany Tax Mapping
+    ↓
+Target Tax
+```
+
+Consider:
+
+- VAT
+- tax percentage
+- tax type
+- fiscal position
+- tax inclusivity
+- company
+- tax account
+
+---
+
+# FISCAL POSITION
+
+Analyze how Odoo 19 Community Fiscal Position works.
+
+Determine whether the system should:
+
+1. Use native fiscal position
+2. Apply fiscal position automatically
+3. Configure intercompany fiscal position
+4. Map taxes using fiscal position
+5. Allow manual accounting review
+
+Do not duplicate Odoo tax engine functionality unnecessarily.
+
+---
+
+# ACCOUNT MAPPING
+
+Accounting accounts can differ between companies.
+
+Do not copy:
+
+```text
+account_id
+```
+
+from Company B to Company A assuming the ID is valid.
+
+The target Vendor Bill must use accounts belonging to the target company and appropriate for the transaction.
+
+Analyze:
+
+- expense account
+- payable account
+- receivable account
+- tax account
+- income account
+- fiscal position
+- product category accounts
+
+Use Odoo's native accounting configuration whenever possible.
+
+---
+
+# CURRENCY
+
+The companies may use different currencies.
+
+Example:
+
+```text
+Company A = IDR
+Company B = IDR
+```
+
+but architecture must also support:
+
+```text
+Company A = IDR
+Company B = USD
+```
+
+Currency conversion must use Odoo's native currency/exchange-rate mechanisms.
+
+Never hard-code exchange rates.
+
+The system must record:
+
+```text
+source_currency
+target_currency
+source_amount
+target_amount
+conversion_date
+exchange_rate
+```
+
+where appropriate.
+
+---
+
+# PAYMENT TERMS
+
+Analyze Payment Terms.
+
+Support mapping where required:
+
+```text
+Source Payment Term
+        ↓
+Target Payment Term
+```
+
+Do not assume payment term IDs are interchangeable.
+
+---
+
+# ATTACHMENTS
+
+Determine how attachments from:
+
+- Purchase RFQ
+- Sales Quotation
+- Sales Order
+- Customer Invoice
+
+should be handled.
+
+Possible strategies:
+
+1. Reference original attachment
+2. Copy attachment
+3. Share attachment
+4. Copy only selected attachments
+
+The solution must avoid unnecessary binary duplication.
+
+Security and company isolation must be considered.
+
+---
+
+# CREDIT NOTE / REFUND
+
+The architecture MUST support:
+
+```text
+Customer Invoice
+       ↓
+Credit Note
+       ↓
+Vendor Bill Refund
+```
+
+The system must maintain traceability.
+
+Example:
+
+```text
+Source Credit Note
+        ↕
+Intercompany Credit Note Bridge
+        ↕
+Target Vendor Bill Refund
+```
+
+Do not simply delete the original Vendor Bill.
+
+Accounting history must remain intact.
+
+---
+
+# CANCELLATION
+
+Cancellation must preserve audit history.
+
+Do NOT delete transactions to solve synchronization problems.
+
+Example:
+
+```text
+Sales Order Cancelled
+        ↓
+Invoice status reviewed
+        ↓
+Vendor Bill handling determined
+```
+
+If a posted Vendor Bill already exists, determine whether the correct accounting action is:
+
+- cancellation
+- reversal
+- refund
+- credit note
+
+based on Odoo accounting rules.
+
+---
+
+# PAYMENT STATUS
+
+Payment synchronization is NOT the same as copying payment records.
+
+Do not create duplicate accounting payments between companies unless explicitly required.
+
+The preferred architecture should initially synchronize:
+
+```text
+Payment Status
+Payment Date
+Payment Reference
+```
+
+rather than creating duplicate payment records.
+
+Example:
+
+```text
+Customer Invoice
+       ↓
+Paid
+       ↓
+Intercompany Status
+       ↓
+Vendor Bill
+       ↓
+Payment Pending / Paid
+```
+
+Analyze carefully whether payment status should be synchronized automatically.
+
+---
+
+# TRANSACTION STATE MACHINE
+
+Design a proper state machine.
+
+Example:
+
+```text
+DRAFT
+   ↓
+RFQ_CREATED
+   ↓
+QUOTATION_CREATED
+   ↓
+QUOTATION_SENT
+   ↓
+SALE_ORDER_CREATED
+   ↓
+SALE_ORDER_CONFIRMED
+   ↓
+INVOICE_DRAFT
+   ↓
+INVOICE_POSTED
+   ↓
+VENDOR_BILL_CREATED
+   ↓
+VENDOR_BILL_POSTED
+   ↓
+PAYMENT_PENDING
+   ↓
+PAID
+```
+
+Alternative states:
+
+```text
+CANCELLED
+ERROR
+RETRY
+```
+
+Do not duplicate native Odoo states unnecessarily.
+
+The bridge state should represent synchronization state, while native documents retain native Odoo states.
+
+---
+
+# ERROR HANDLING
+
+The system must not silently fail.
+
+Example:
+
+```text
+Product Mapping Missing
+Tax Mapping Missing
+Partner Mapping Missing
+Currency Error
+Access Error
+Company Error
+Invoice Creation Error
+Vendor Bill Creation Error
+Duplicate Transaction
+Invalid Configuration
+```
+
+The system must record:
+
+```text
+error message
+date/time
+user
+source document
+target document
+operation
+stack/reference if appropriate
+retry count
+```
+
+Users should be able to retry failed synchronization.
+
+---
+
+# SYNC LOG
+
+Create a proper audit/synchronization log.
+
+Possible model:
+
+```text
+intercompany.sync.log
+```
+
+Fields may include:
+
+```text
+transaction_id
+date
+user_id
+
+source_company_id
+target_company_id
+
+document_type
+source_document_id
+target_document_id
+
+operation
+old_state
+new_state
+
+result
+error_message
+
+duration
+retry_count
+```
+
+Example:
+
+```text
+2026-10-08 10:15
+Company A → Company B
+Purchase RFQ → Sales Quotation
+SUCCESS
+```
+
+or:
+
+```text
+Company B → Company A
+Customer Invoice → Vendor Bill
+FAILED
+Reason:
+Tax mapping not configured
+```
+
+---
+
+# SECURITY
+
+Multi-company security is critical.
+
+Company A users must NOT automatically gain permission to edit Company B documents.
+
+Example:
+
+### Kalimasada User
+
+Can access:
+
+```text
+Company A Purchase RFQ
+Company A Purchase Order
+Company A Vendor Bill
+Intercompany records relevant to Company A
+```
+
+But should not be able to freely edit:
+
+```text
+Company B Sales Order
+Company B Customer Invoice
+```
+
+### imen.co.id User
+
+Can access:
+
+```text
+Company B Sales Quotation
+Company B Sales Order
+Company B Customer Invoice
+Intercompany records relevant to Company B
+```
+
+But should not freely edit:
+
+```text
+Company A Purchase RFQ
+Company A Vendor Bill
+```
+
+Implement proper:
+
+- `ir.model.access.csv`
+- Record Rules
+- Company restrictions
+- `company_id`
+- `check_company=True`
+- `_check_company_auto = True`
+
+where appropriate.
+
+Do NOT solve security problems by using:
+
+```python
+sudo()
+```
+
+everywhere.
+
+Use `sudo()` only when architecturally justified and document why.
+
+---
+
+# MULTI-COMPANY ORM RULES
+
+The implementation must correctly handle:
+
+```python
+env.company
+env.companies
+allowed_company_ids
+with_company()
+```
+
+and company-dependent records.
+
+Use:
+
+```python
+with_company(target_company)
+```
+
+where necessary.
+
+Do not assume the current user's active company is the same as:
+
+```text
+source company
+```
+
+or:
+
+```text
+target company
+```
+
+The system must explicitly control company context.
+
+---
+
+# CROSS-COMPANY TRANSACTION CREATION
+
+When creating the target Sales Order from a source Purchase RFQ:
+
+1. Validate source company
+2. Validate target company
+3. Validate intercompany route
+4. Validate partner
+5. Validate product
+6. Validate UoM
+7. Validate currency
+8. Validate taxes
+9. Validate payment terms
+10. Switch to target company context
+11. Create native Sales Order
+12. Link bridge
+13. Log synchronization
+14. Return result
+
+Equivalent logic applies to:
+
+```text
+Invoice → Vendor Bill
+```
+
+---
+
+# DO NOT HARD-CODE DATABASE IDS
+
+Never write:
+
+```python
+company_id = 3
+partner_id = 15
+product_id = 100
+tax_id = 7
+```
+
+Never assume IDs.
+
+Everything must be configurable or dynamically resolved.
+
+---
+
+# USER INTERFACE
+
+The module should provide a clean UI.
+
+## MENU
+
+Suggested:
+
+```text
+Intercompany
+├── Transactions
+├── Routes
+├── Product Mapping
+├── Partner Mapping
+├── Tax Mapping
+├── Sync Logs
+└── Configuration
+```
+
+Only create menus that are actually necessary.
+
+---
+
+# PURCHASE RFQ UI
+
+Add an Intercompany section or smart buttons.
+
+Example:
+
+```text
+Intercompany
+Sales Quotation
+Sales Order
+Customer Invoice
+Vendor Bill
+Sync Log
+```
+
+Display:
+
+```text
+Intercompany Status
+Target Company
+Last Sync
+Sync Error
+```
+
+---
+
+# SALES QUOTATION UI
+
+Show:
+
+```text
+Source Purchase RFQ
+Source Company
+Intercompany Transaction
+```
+
+Smart buttons:
+
+```text
+Purchase RFQ
+Intercompany
+Sync Log
+```
+
+---
+
+# SALES ORDER UI
+
+Show:
+
+```text
+Source Purchase RFQ
+Source Company
+Intercompany Transaction
+```
+
+Smart buttons:
+
+```text
+Purchase RFQ
+Customer Invoice
+Vendor Bill
+Intercompany
+```
+
+---
+
+# CUSTOMER INVOICE UI
+
+Show:
+
+```text
+Source Purchase RFQ
+Source Sales Order
+Target Company
+Intercompany Transaction
+Vendor Bill
+```
+
+Smart buttons:
+
+```text
+Purchase RFQ
+Sales Order
+Vendor Bill
+Intercompany
+Sync Log
+```
+
+---
+
+# VENDOR BILL UI
+
+Show:
+
+```text
+Source Customer Invoice
+Source Sales Order
+Source Purchase RFQ
+Source Company
+Intercompany Transaction
+```
+
+Smart buttons:
+
+```text
+Customer Invoice
+Sales Order
+Purchase RFQ
+Intercompany
+Sync Log
+```
+
+---
+
+# DASHBOARD
+
+Design an optional dashboard.
+
+Possible KPI:
+
+```text
+RFQ Pending
+Quotation Pending
+Quotation Confirmed
+Sales Orders
+Invoices Draft
+Invoices Posted
+Vendor Bills Draft
+Vendor Bills Posted
+Payments Pending
+Paid
+Synchronization Errors
+```
+
+Add filters:
+
+```text
+Company
+Date
+Transaction State
+Source Document
+Target Document
+Error
+```
+
+Do not over-engineer the dashboard if standard Odoo reporting is sufficient.
+
+---
+
+# INTERCOMPANY TRANSACTION MODEL
+
+Evaluate the main bridge model.
+
+Recommended:
+
+```text
+intercompany.transaction
+```
+
+Potential fields:
+
+```text
+name
+
+source_company_id
+target_company_id
+
+transaction_type
+
+source_purchase_order_id
+target_sale_order_id
+
+source_sale_order_id
+target_purchase_order_id
+
+source_invoice_id
+target_vendor_bill_id
+
+source_credit_note_id
+target_vendor_refund_id
+
+state
+sync_state
+
+integration_key
+
+source_reference
+target_reference
+
+currency_id
+
+source_amount
+target_amount
+
+last_sync_date
+last_sync_user_id
+
+sync_error
+retry_count
+
+active
+```
+
+Do not blindly implement all fields.
+
+Normalize the architecture where appropriate.
+
+---
+
+# DOCUMENT RELATIONSHIP
+
+The architecture should support:
+
+```text
+purchase.order
+    ↓
+intercompany.transaction
+    ↓
+sale.order
+    ↓
+account.move
+    ↓
+intercompany.transaction
+    ↓
+account.move
+```
+
+Avoid unnecessary duplicated references if the bridge can provide the relationship.
+
+Determine whether direct Many2one fields, bridge relationships, or both are appropriate.
+
+---
+
+# DATABASE DESIGN
+
+Produce an ERD covering at minimum:
+
+```text
+res.company
+res.partner
+product.product
+product.template
+purchase.order
+purchase.order.line
+sale.order
+sale.order.line
+account.move
+account.move.line
+account.tax
+account.fiscal.position
+res.currency
+account.payment.term
+intercompany.transaction
+intercompany.route
+intercompany.product.mapping
+intercompany.partner.mapping
+intercompany.tax.mapping
+intercompany.sync.log
+```
+
+Only include custom models that are actually required.
+
+---
+
+# DATABASE CONSTRAINTS
+
+Design appropriate constraints.
+
+Examples:
+
+```text
+unique integration_key
+unique source transaction + target company
+valid source company
+valid target company
+source company != target company
+```
+
+Do not create unnecessary constraints that conflict with legitimate Odoo workflows.
+
+---
+
+# PERFORMANCE
+
+The system must support potentially large transaction volumes.
+
+Avoid:
+
+```python
+for record in records:
+    search(...)
+```
+
+when it causes N+1 queries.
+
+Use:
+
+- batch processing
+- ORM efficiently
+- appropriate indexes
+- database constraints
+- computed fields carefully
+- stored fields only where justified
+
+Avoid raw SQL unless there is a demonstrated performance requirement.
+
+If raw SQL is proposed, explain why ORM is insufficient.
+
+---
+
+# CRON / AUTOMATIC SYNCHRONIZATION
+
+Determine whether synchronization should be:
+
+### Option A
+
+Immediate synchronous transaction.
+
+Example:
+
+```text
+Confirm RFQ
+   ↓
+Create Sales Quotation immediately
+```
+
+### Option B
+
+Queue / scheduled synchronization.
+
+Example:
+
+```text
+Purchase RFQ
+   ↓
+Pending Sync
+   ↓
+Cron
+   ↓
+Sales Quotation
+```
+
+Evaluate both.
+
+For the first implementation, prefer the simplest robust architecture.
+
+If asynchronous processing is needed, design it carefully without relying on Enterprise-only queue modules.
+
+---
+
+# MANUAL SYNC
+
+Provide manual synchronization actions where appropriate.
+
+Example buttons:
+
+```text
+Create Intercompany Transaction
+Sync Now
+Retry
+Open Target Document
+View Sync Log
+```
+
+Manual sync must still be idempotent.
+
+---
+
+# AUDIT TRAIL
+
+Every important synchronization event must be traceable.
+
+Example:
+
+```text
+Source:
+PO/RFQ/0001
+
+Target:
+SO/0001
+
+Action:
+CREATE_SALE_ORDER
+
+User:
+admin
+
+Time:
+2026-10-08 10:30
+
+Result:
+SUCCESS
+```
+
+The audit log should not be editable by normal users.
+
+---
+
+# NATIVE VS CUSTOM MATRIX
+
+This is mandatory.
+
+Create a table:
+
+| Function | Odoo 19 Community Native | Custom Required | Implementation |
+|---|---:|---:|---|
+| Multi-Company | ? | ? | ? |
+| Purchase RFQ | ? | ? | ? |
+| Sales Quotation | ? | ? | ? |
+| Sales Order | ? | ? | ? |
+| Customer Invoice | ? | ? | ? |
+| Vendor Bill | ? | ? | ? |
+| RFQ → Sales Quotation | ? | ? | ? |
+| SO → Invoice | ? | ? | ? |
+| Invoice → Vendor Bill | ? | ? | ? |
+| Product Mapping | ? | ? | ? |
+| Partner Mapping | ? | ? | ? |
+| Tax Mapping | ? | ? | ? |
+| Currency Conversion | ? | ? | ? |
+| Payment Status | ? | ? | ? |
+| Audit Log | ? | ? | ? |
+| Retry | ? | ? | ? |
+| Traceability | ? | ? | ? |
+
+Do not assume the answer.
+
+Base the matrix on actual Odoo 19 Community functionality.
+
+---
+
+# NATIVE ODOO MODELS TO REUSE
+
+Analyze these models:
+
+```text
+res.company
+res.partner
+product.product
+product.template
+purchase.order
+purchase.order.line
+sale.order
+sale.order.line
+account.move
+account.move.line
+account.tax
+account.fiscal.position
+res.currency
+account.payment.term
+account.payment
+```
+
+Also inspect relevant standard methods before overriding anything.
+
+---
+
+# ODOO DEVELOPMENT RULES
+
+Follow Odoo 19 development standards.
+
+Use:
+
+```python
+models.Model
+fields.Many2one
+fields.One2many
+fields.Many2many
+api.depends
+api.constrains
+```
+
+where appropriate.
+
+Use proper XML inheritance.
+
+Prefer:
+
+```xml
+<record>
+```
+
+and standard Odoo views.
+
+Avoid modifying core Odoo source code.
+
+Use module inheritance.
+
+Do not monkey-patch unless absolutely necessary.
+
+---
+
+# COMPANY CONSISTENCY
+
+For models with company ownership, consider:
+
+```python
+_check_company_auto = True
+```
+
+and:
+
+```python
+check_company=True
+```
+
+where appropriate.
+
+Explain every important company consistency decision.
+
+---
+
+# ACCOUNTING SAFETY
+
+This module handles accounting-related documents.
+
+Therefore:
+
+- never silently alter posted accounting entries
+- never delete posted accounting documents
+- never bypass accounting validation
+- never manipulate journal entries without justification
+- never create invalid account.move records
+- preserve accounting auditability
+
+Use native Odoo accounting APIs.
+
+---
+
+# DATA VALIDATION
+
+Before creating a target document validate:
+
+```text
+Source Company
+Target Company
+Partner
+Product
+UoM
+Currency
+Tax
+Fiscal Position
+Payment Term
+Journal
+Accounting configuration
+```
+
+If something is missing:
+
+```text
+Do NOT create partial transaction.
+```
+
+Return a meaningful error.
+
+---
+
+# TRANSACTION ATOMICITY
+
+Where appropriate, ensure that a synchronization either:
+
+```text
+SUCCESS
+```
+
+or:
+
+```text
+FAILED WITHOUT CORRUPTING THE SOURCE
+```
+
+Do not leave half-created target transactions without a traceable bridge state.
+
+If partial creation is unavoidable, design recovery logic.
+
+---
+
+# RETRY
+
+Example:
+
+```text
+Invoice Posted
+      ↓
+Vendor Bill creation failed
+      ↓
+State = ERROR
+      ↓
+Fix mapping
+      ↓
+Retry
+      ↓
+Vendor Bill created
+```
+
+Retry must reuse the existing integration relationship.
+
+It must not create duplicates.
+
+---
+
+# TESTING
+
+Create automated tests for:
+
+## Test 1
+
+Purchase RFQ → Sales Quotation
+
+## Test 2
+
+Sales Quotation → Sales Order
+
+## Test 3
+
+Sales Order → Customer Invoice
+
+## Test 4
+
+Customer Invoice → Vendor Bill
+
+## Test 5
+
+Duplicate synchronization
+
+## Test 6
+
+Product mapping missing
+
+## Test 7
+
+Partner mapping missing
+
+## Test 8
+
+Tax mapping missing
+
+## Test 9
+
+Currency difference
+
+## Test 10
+
+Company security
+
+## Test 11
+
+User from Company A attempting to access Company B transaction
+
+## Test 12
+
+Credit Note → Vendor Bill Refund
+
+## Test 13
+
+Cancellation
+
+## Test 14
+
+Retry after synchronization error
+
+## Test 15
+
+Attachment handling
+
+## Test 16
+
+Payment status
+
+## Test 17
+
+Concurrent synchronization
+
+## Test 18
+
+Integration key uniqueness
+
+---
+
+# SECURITY TESTING
+
+Explicitly test:
+
+```text
+Company A User
+Company B User
+Multi-company User
+Administrator
+Accounting User
+Sales User
+Purchase User
+```
+
+Make sure users cannot use the bridge to bypass Odoo's normal company security.
+
+---
+
+# ACCEPTANCE CRITERIA
+
+The implementation is considered successful when:
+
+### Scenario A
+
+Kalimasada creates:
+
+```text
+Purchase RFQ
+```
+
+→ imen receives corresponding:
+
+```text
+Sales Quotation
+```
+
+### Scenario B
+
+imen confirms:
+
+```text
+Sales Quotation
+```
+
+→ source Purchase RFQ sees:
+
+```text
+Sales Order
+```
+
+### Scenario C
+
+imen creates/posts:
+
+```text
+Customer Invoice
+```
+
+→ Kalimasada receives:
+
+```text
+Vendor Bill
+```
+
+### Scenario D
+
+Synchronization runs twice.
+
+Result:
+
+```text
+Only one target transaction
+```
+
+### Scenario E
+
+Tax mapping is missing.
+
+Result:
+
+```text
+No invalid Vendor Bill
+State = ERROR
+Meaningful error message
+Retry available
+```
+
+### Scenario F
+
+Company A user opens Company B Sales Order.
+
+Result:
+
+```text
+Access denied according to company security
+```
+
+### Scenario G
+
+Credit Note is created.
+
+Result:
+
+```text
+Corresponding intercompany refund process
+```
+
+with complete traceability.
+
+---
+
+# REPORTING
+
+Provide reports or searchable lists for:
+
+```text
+Intercompany Transactions
+Pending Synchronization
+Synchronization Errors
+RFQ → Sales Quotation
+Sales Order → Invoice
+Invoice → Vendor Bill
+Payment Status
+```
+
+Use standard Odoo reporting where possible.
+
+---
+
+# ARCHITECTURE DIAGRAM
+
+Provide a complete architecture diagram:
+
+```text
+                    ODOO 19 COMMUNITY
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+       COMPANY A                 COMPANY B
+   PT Kalimasada                  imen.co.id
+              │                         │
+       Purchase RFQ               Sales Quotation
+              │                         │
+              └──────────┬──────────────┘
+                         │
+              Intercompany Transaction
+                         │
+              ┌──────────┴──────────┐
+              │                     │
+         Sync Engine           Mapping Engine
+              │                     │
+              └──────────┬──────────┘
+                         │
+                  Audit / Error Log
+                         │
+              ┌──────────┴──────────┐
+              │                     │
+        Customer Invoice       Vendor Bill
+```
+
+Improve this architecture if your analysis identifies a better design.
+
+---
+
+# SEQUENCE DIAGRAM
+
+Create sequence diagrams for:
+
+## Flow 1
+
+```text
+Purchase RFQ
+→ Intercompany Bridge
+→ Sales Quotation
+```
+
+## Flow 2
+
+```text
+Sales Quotation
+→ Sales Order
+→ Customer Invoice
+```
+
+## Flow 3
+
+```text
+Customer Invoice
+→ Intercompany Invoice Bridge
+→ Vendor Bill
+```
+
+## Flow 4
+
+```text
+Invoice
+→ Vendor Bill
+→ Payment Status
+```
+
+## Flow 5
+
+```text
+Synchronization Error
+→ Retry
+→ Successful Target Creation
+```
+
+---
+
+# ERD
+
+Provide complete ERD.
+
+Clearly distinguish:
+
+### Native Odoo Models
+
+from:
+
+### Custom Models
+
+Example:
+
+```text
+NATIVE
+res.company
+res.partner
+product.product
+purchase.order
+sale.order
+account.move
+
+CUSTOM
+intercompany.transaction
+intercompany.route
+intercompany.product.mapping
+intercompany.partner.mapping
+intercompany.tax.mapping
+intercompany.sync.log
+```
+
+Only retain custom models that are justified.
+
+---
+
+# PHASED DEVELOPMENT
+
+DO NOT immediately start coding.
+
+The work must be divided into phases.
+
+---
+
+# PHASE 1 — ARCHITECTURE REVIEW
+
+First deliver a comprehensive architecture review containing:
+
+1. Understanding of business requirements
+2. Odoo 19 Community capability analysis
+3. Native vs custom matrix
+4. Enterprise-only assumptions that must be avoided
+5. Gap analysis
+6. Recommended architecture
+7. Module naming
+8. End-to-end business process
+9. Transaction lifecycle
+10. State machine
+11. Architecture diagram
+12. Sequence diagrams
+13. ERD
+14. Native Odoo models to reuse
+15. Proposed custom models
+16. Complete field specification
+17. Company security architecture
+18. Product mapping
+19. Partner mapping
+20. Tax mapping
+21. Fiscal Position strategy
+22. Currency strategy
+23. Payment Terms strategy
+24. Invoice → Vendor Bill strategy
+25. Credit Note / Refund strategy
+26. Cancellation strategy
+27. Payment status strategy
+28. Attachment strategy
+29. Idempotency strategy
+30. Error handling
+31. Retry mechanism
+32. Audit log
+33. Performance strategy
+34. Cron / synchronization strategy
+35. Manual synchronization strategy
+36. Security rules
+37. Access rights
+38. Record rules
+39. Automated test plan
+40. Acceptance criteria
+41. Deployment architecture
+42. Migration considerations
+43. Risks and mitigation
+44. Final recommended architecture
+
+---
+
+# PHASE 2 — TECHNICAL SPECIFICATION
+
+After Phase 1, produce a detailed technical specification containing:
+
+## Module structure
+
+Example:
+
+```text
+hadir_intercompany_transaction/
+├── __init__.py
+├── __manifest__.py
+├── models/
+│   ├── __init__.py
+│   ├── intercompany_transaction.py
+│   ├── intercompany_route.py
+│   ├── intercompany_mapping.py
+│   └── intercompany_sync_log.py
+├── views/
+├── security/
+├── data/
+├── wizard/
+├── reports/
+└── tests/
+```
+
+Do not blindly follow this structure.
+
+Modify it according to the architecture.
+
+---
+
+# MODEL SPECIFICATION
+
+For every custom model specify:
+
+```text
+Model Name
+Technical Name
+Purpose
+Fields
+Field Type
+Required
+Readonly
+Company
+Relation
+Index
+Compute
+Store
+Constraint
+Security
+```
+
+---
+
+# METHOD SPECIFICATION
+
+For every important method specify:
+
+```text
+Method Name
+Purpose
+Input
+Output
+Transaction Context
+Company Context
+Validation
+Error Handling
+Idempotency
+Side Effects
+```
+
+Examples:
+
+```python
+action_sync()
+action_retry()
+_create_target_sale_order()
+_create_target_vendor_bill()
+_validate_mapping()
+_get_target_partner()
+_get_target_product()
+_get_target_tax()
+_build_integration_key()
+```
+
+Only implement methods that are actually needed.
+
+---
+
+# SECURITY SPECIFICATION
+
+Provide:
+
+```text
+ir.model.access.csv
+Record Rules
+Groups
+Company Restrictions
+Field Restrictions
+```
+
+Explain how cross-company security is enforced.
+
+---
+
+# DATA FLOW
+
+Document the complete data mapping:
+
+```text
+Purchase Order
+        ↓
+Sales Order
+```
+
+Map:
+
+```text
+Partner
+Product
+Description
+Quantity
+UoM
+Price
+Discount
+Taxes
+Currency
+Payment Terms
+Date
+Reference
+Notes
+Attachments
+```
+
+Then:
+
+```text
+Customer Invoice
+        ↓
+Vendor Bill
+```
+
+Map:
+
+```text
+Partner
+Invoice Date
+Due Date
+Currency
+Invoice Lines
+Product
+Quantity
+Price
+Discount
+Tax
+Account
+Analytic Account
+Reference
+Payment Terms
+Attachments
+```
+
+---
+
+# ACCOUNTING REVIEW
+
+The technical specification must explicitly address:
+
+```text
+Receivable
+Payable
+Revenue
+Expense
+Tax
+Fiscal Position
+Currency
+Exchange Rate
+Payment Terms
+Journal
+Analytic Accounting
+```
+
+Do not assume identical accounting configuration between companies.
+
+---
+
+# CODING RULES
+
+When coding eventually begins:
+
+1. Odoo 19 Community only
+2. Python
+3. PostgreSQL through Odoo ORM
+4. XML views
+5. No Enterprise dependency
+6. No hard-coded IDs
+7. No hard-coded company names
+8. No hard-coded product IDs
+9. No hard-coded tax IDs
+10. No unnecessary raw SQL
+11. No unnecessary `sudo()`
+12. No direct database manipulation
+13. Use native Odoo models
+14. Respect Multi-Company
+15. Use `with_company()` correctly
+16. Maintain idempotency
+17. Maintain auditability
+18. Preserve accounting integrity
+19. Avoid duplicate standard functionality
+20. Write automated tests
+21. Follow Odoo coding conventions
+22. Keep code modular
+23. Keep configuration flexible
+24. Make synchronization retryable
+25. Make errors understandable to business users
+
+---
+
+# CRITICAL RULE
+
+Do NOT start coding immediately.
+
+First perform:
+
+> **PHASE 1 — ARCHITECTURE REVIEW**
+
+Then:
+
+> **PHASE 2 — TECHNICAL SPECIFICATION**
+
+Only after the architecture and technical specification are reviewed and approved should coding begin.
+
+After completing Phase 1 and Phase 2, STOP.
+
+Wait for my explicit command:
+
+```text
+LANJUT CODING PHASE 1
+```
+
+Do not generate the full module implementation before receiving that command.
+
+---
+
+# FINAL OUTPUT FORMAT FOR YOUR FIRST RESPONSE
+
+Your first response must contain:
+
+## 1. Executive Summary
+
+## 2. Understanding of Business Flow
+
+## 3. Odoo 19 Community Native Capability
+
+## 4. Enterprise Features That Must NOT Be Assumed
+
+## 5. Native vs Custom Matrix
+
+## 6. Gap Analysis
+
+## 7. Recommended Architecture
+
+## 8. End-to-End Business Process
+
+## 9. Transaction State Machine
+
+## 10. Architecture Diagram
+
+## 11. Sequence Diagram
+
+## 12. ERD
+
+## 13. Proposed Models
+
+## 14. Field Specifications
+
+## 15. RFQ → Sales Quotation Design
+
+## 16. Sales Quotation → Sales Order Design
+
+## 17. Sales Order → Customer Invoice Design
+
+## 18. Customer Invoice → Vendor Bill Design
+
+## 19. Credit Note / Refund Design
+
+## 20. Cancellation Design
+
+## 21. Payment Status Design
+
+## 22. Product Mapping
+
+## 23. Partner Mapping
+
+## 24. Tax Mapping
+
+## 25. Fiscal Position
+
+## 26. Currency
+
+## 27. Payment Terms
+
+## 28. Attachment Strategy
+
+## 29. Idempotency
+
+## 30. Error Handling
+
+## 31. Retry
+
+## 32. Audit Log
+
+## 33. Security / Multi-Company
+
+## 34. Performance
+
+## 35. Automated Testing Strategy
+
+## 36. Deployment Considerations
+
+## 37. Risks
+
+## 38. Final Architecture Recommendation
+
+Then STOP.
+
+Do NOT write production code yet.
+
+Wait for:
+
+```text
+LANJUT CODING PHASE 1
+```
+
+---
+
+# MOST IMPORTANT OBJECTIVE
+
+The final system must feel like a **native Odoo 19 Community extension**, not a separate ERP inside Odoo.
+
+The design must preserve:
+
+```text
+Native Purchase
++
+Native Sales
++
+Native Accounting
++
+Native Multi-Company
++
+Custom Intercompany Orchestration
++
+Custom Mapping
++
+Custom Traceability
++
+Custom Audit
++
+Custom Retry
+```
+
+The final result must provide a reliable end-to-end transaction:
+
+```text
+PT KALIMASADA INDONESIA
+
+Purchase RFQ
+      ↓
+Intercompany Transaction
+      ↓
+imen.co.id
+
+Sales Quotation
+      ↓
+Sales Order
+      ↓
+Customer Invoice
+      ↓
+Intercompany Invoice Transaction
+      ↓
+
+PT KALIMASADA INDONESIA
+
+Vendor Bill
+      ↓
+Accounting
+      ↓
+Payment
+```
+
+with complete:
+
+```text
+TRACEABILITY
+AUDITABILITY
+IDEMPOTENCY
+SECURITY
+MULTI-COMPANY ISOLATION
+ACCOUNTING INTEGRITY
+ERROR HANDLING
+RETRYABILITY
+```
+
+and without depending on Odoo Enterprise functionality.
