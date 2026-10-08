@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_purchase_order_form_intercompany" model="ir.ui.view">
+            <field name="name">purchase.order.form.intercompany</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button name="action_send_intercompany" type="object"
+                            string="Send to Intercompany" class="btn-secondary"
+                            groups="hadir_intercompany_transaction.group_intercompany_user"
+                            invisible="intercompany_transaction_id or state not in ('draft', 'sent')"
+                            confirm="Create the intercompany transaction and the sales quotation in the seller company?"/>
+                </xpath>
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <button name="action_view_intercompany" type="object" class="oe_stat_button"
+                            icon="fa-exchange"
+                            groups="hadir_intercompany_transaction.group_intercompany_user"
+                            invisible="not intercompany_transaction_id">
+                        <div class="o_stat_info">
+                            <span class="o_stat_text">Intercompany</span>
+                            <field name="intercompany_sync_state" widget="badge"
+                                   decoration-info="intercompany_sync_state in ('draft', 'quotation_created', 'quotation_sent')"
+                                   decoration-warning="intercompany_sync_state in ('so_confirmed', 'partially_invoiced')"
+                                   decoration-success="intercompany_sync_state == 'fully_invoiced'"
+                                   decoration-danger="intercompany_sync_state == 'error'"
+                                   invisible="not intercompany_sync_state"/>
+                        </div>
+                    </button>
+                </xpath>
+                <xpath expr="//notebook" position="inside">
+                    <page name="intercompany" string="Intercompany"
+                          groups="hadir_intercompany_transaction.group_intercompany_user"
+                          invisible="not intercompany_transaction_id">
+                        <group>
+                            <field name="intercompany_transaction_id"/>
+                            <field name="intercompany_sync_state" widget="badge"
+                                   decoration-info="intercompany_sync_state in ('draft', 'quotation_created', 'quotation_sent')"
+                                   decoration-warning="intercompany_sync_state in ('so_confirmed', 'partially_invoiced')"
+                                   decoration-success="intercompany_sync_state == 'fully_invoiced'"
+                                   decoration-danger="intercompany_sync_state == 'error'"/>
+                        </group>
+                        <div class="text-muted">
+                            All cross-company details (seller quotation status, invoices, vendor
+                            bills, payment mirror and sync log) are available on the
+                            intercompany transaction record.
+                        </div>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

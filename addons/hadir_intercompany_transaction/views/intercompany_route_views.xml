@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_intercompany_route_list" model="ir.ui.view">
+            <field name="name">intercompany.route.list</field>
+            <field name="model">intercompany.route</field>
+            <field name="arch" type="xml">
+                <list decoration-muted="not active">
+                    <field name="sequence" widget="handle"/>
+                    <field name="name"/>
+                    <field name="source_company_id" groups="base.group_multi_company"/>
+                    <field name="target_company_id" groups="base.group_multi_company"/>
+                    <field name="purchase_to_sale_enabled" widget="boolean"/>
+                    <field name="auto_create_vendor_bill" widget="boolean"/>
+                    <field name="vendor_bill_auto_post" widget="boolean" optional="hide"/>
+                    <field name="target_user_id" optional="show"/>
+                    <field name="source_user_id" optional="show"/>
+                    <field name="active" widget="boolean" optional="hide"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_intercompany_route_form" model="ir.ui.view">
+            <field name="name">intercompany.route.form</field>
+            <field name="model">intercompany.route</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="name" placeholder="e.g. Kalimasada - imen"/></h1>
+                        </div>
+                        <group>
+                            <group name="companies" string="Companies">
+                                <field name="active" invisible="1"/>
+                                <field name="source_company_id"/>
+                                <field name="target_company_id"/>
+                            </group>
+                            <group name="users" string="Integration Users">
+                                <field name="target_user_id"
+                                       invisible="not purchase_to_sale_enabled and not auto_create_vendor_bill"/>
+                                <field name="source_user_id" invisible="not auto_create_vendor_bill"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="flows" string="Flows">
+                                <group>
+                                    <group string="RFQ to Sales Quotation (buyer to seller)">
+                                        <field name="purchase_to_sale_enabled"/>
+                                        <field name="auto_create_quotation"
+                                               invisible="not purchase_to_sale_enabled"/>
+                                    </group>
+                                    <group string="Invoice to Vendor Bill (seller to buyer)">
+                                        <field name="auto_create_vendor_bill"/>
+                                        <field name="vendor_bill_auto_post"
+                                               invisible="not auto_create_vendor_bill"/>
+                                        <field name="auto_cancel_draft_bill"
+                                               invisible="not auto_create_vendor_bill"/>
+                                        <field name="payment_status_sync_enabled"
+                                               invisible="not auto_create_vendor_bill"/>
+                                    </group>
+                                </group>
+                                <div class="text-muted">
+                                    Vendor bills are created as drafts for buyer accounting review.
+                                    Auto-post is discouraged: the buyer should always review the bill
+                                    before posting. No payment entry is ever copied between companies -
+                                    only the payment status is mirrored.
+                                </div>
+                            </page>
+                            <page name="mapping" string="Mapping Rules">
+                                <group>
+                                    <group string="Strictness">
+                                        <field name="product_mapping_required"/>
+                                        <field name="tax_mapping_required"/>
+                                        <field name="default_payment_term_id"/>
+                                    </group>
+                                </group>
+                                <div class="alert alert-info" role="alert">
+                                    Taxes are always company-specific: configure explicit mappings in
+                                    both directions. Products shared between companies (Company field
+                                    empty) do not need a mapping.
+                                </div>
+                            </page>
+                            <page name="product_mappings" string="Product Mappings">
+                                <field name="product_mapping_ids">
+                                    <list editable="bottom">
+                                        <field name="direction"/>
+                                        <field name="source_product_id"/>
+                                        <field name="target_product_id"/>
+                                        <field name="active" widget="boolean"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page name="tax_mappings" string="Tax Mappings">
+                                <field name="tax_mapping_ids">
+                                    <list editable="bottom">
+                                        <field name="direction"/>
+                                        <field name="source_tax_id"/>
+                                        <field name="target_tax_id"/>
+                                        <field name="active" widget="boolean"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_intercompany_route" model="ir.actions.act_window">
+            <field name="name">Routes</field>
+            <field name="res_model">intercompany.route</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+    </data>
+</odoo>

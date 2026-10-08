@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_intercompany_product_mapping_list" model="ir.ui.view">
+            <field name="name">intercompany.product.mapping.list</field>
+            <field name="model">intercompany.product.mapping</field>
+            <field name="arch" type="xml">
+                <list decoration-muted="not active">
+                    <field name="route_id"/>
+                    <field name="direction"/>
+                    <field name="source_product_id"/>
+                    <field name="target_product_id"/>
+                    <field name="active" widget="boolean"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_intercompany_product_mapping_search" model="ir.ui.view">
+            <field name="name">intercompany.product.mapping.search</field>
+            <field name="model">intercompany.product.mapping</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="source_product_id"/>
+                    <field name="target_product_id"/>
+                    <field name="route_id"/>
+                    <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_route" string="Route" context="{'group_by': 'route_id'}"/>
+                        <filter name="group_direction" string="Direction" context="{'group_by': 'direction'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_intercompany_product_mapping" model="ir.actions.act_window">
+            <field name="name">Product Mappings</field>
+            <field name="res_model">intercompany.product.mapping</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <record id="view_intercompany_tax_mapping_list" model="ir.ui.view">
+            <field name="name">intercompany.tax.mapping.list</field>
+            <field name="model">intercompany.tax.mapping</field>
+            <field name="arch" type="xml">
+                <list decoration-muted="not active">
+                    <field name="route_id"/>
+                    <field name="direction"/>
+                    <field name="source_tax_id"/>
+                    <field name="target_tax_id"/>
+                    <field name="active" widget="boolean"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_intercompany_tax_mapping_search" model="ir.ui.view">
+            <field name="name">intercompany.tax.mapping.search</field>
+            <field name="model">intercompany.tax.mapping</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="source_tax_id"/>
+                    <field name="target_tax_id"/>
+                    <field name="route_id"/>
+                    <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_route" string="Route" context="{'group_by': 'route_id'}"/>
+                        <filter name="group_direction" string="Direction" context="{'group_by': 'direction'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_intercompany_tax_mapping" model="ir.actions.act_window">
+            <field name="name">Tax Mappings</field>
+            <field name="res_model">intercompany.tax.mapping</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+    </data>
+</odoo>

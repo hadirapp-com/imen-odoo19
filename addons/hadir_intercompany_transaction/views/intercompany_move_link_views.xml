@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_intercompany_move_link_list" model="ir.ui.view">
+            <field name="name">intercompany.move.link.list</field>
+            <field name="model">intercompany.move.link</field>
+            <field name="arch" type="xml">
+                <list decoration-danger="state == 'error'"
+                      decoration-muted="state == 'cancelled'">
+                    <field name="transaction_id"/>
+                    <field name="link_type"/>
+                    <field name="source_document_name"/>
+                    <field name="target_document_name"/>
+                    <field name="source_amount_total" widget="monetary"
+                           options="{'currency_field': 'source_currency_id'}"/>
+                    <field name="source_currency_id" optional="hide"/>
+                    <field name="state" widget="badge"
+                           decoration-info="state == 'pending'"
+                           decoration-warning="state == 'draft'"
+                           decoration-success="state == 'posted'"
+                           decoration-danger="state == 'error'"/>
+                    <field name="payment_state" widget="badge"
+                           decoration-success="payment_state in ('paid', 'in_payment')"
+                           decoration-info="payment_state == 'not_paid'"
+                           optional="show"/>
+                    <field name="last_sync_date" optional="show"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_intercompany_move_link_search" model="ir.ui.view">
+            <field name="name">intercompany.move.link.search</field>
+            <field name="model">intercompany.move.link</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="source_document_name"/>
+                    <field name="target_document_name"/>
+                    <field name="integration_key"/>
+                    <field name="transaction_id"/>
+                    <filter name="errors" string="Errors" domain="[('state', '=', 'error')]"/>
+                    <filter name="unpaid" string="Payment Pending"
+                            domain="[('payment_state', 'in', ('not_paid', 'none')), ('state', '=', 'posted')]"/>
+                    <filter name="paid" string="Paid"
+                            domain="[('payment_state', 'in', ('paid', 'in_payment'))]"/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_transaction" string="Transaction" context="{'group_by': 'transaction_id'}"/>
+                        <filter name="group_state" string="State" context="{'group_by': 'state'}"/>
+                        <filter name="group_payment" string="Payment Status" context="{'group_by': 'payment_state'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_intercompany_move_link_form" model="ir.ui.view">
+            <field name="name">intercompany.move.link.form</field>
+            <field name="model">intercompany.move.link</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="action_retry" type="object" string="Retry" class="btn-primary"
+                                invisible="state != 'error' or target_move_id"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_open_source_move" type="object" class="oe_stat_button"
+                                    icon="fa-file-text" invisible="not can_open_source_documents">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Source Invoice</span>
+                                    <span class="o_stat_value"><field name="source_document_name"/></span>
+                                </div>
+                            </button>
+                            <button name="action_open_target_move" type="object" class="oe_stat_button"
+                                    icon="fa-credit-card"
+                                    invisible="not can_open_target_documents or not target_move_id">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Vendor Bill</span>
+                                    <span class="o_stat_value"><field name="target_document_name"/></span>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="alert alert-danger" role="alert" invisible="not sync_error">
+                            <field name="sync_error"/>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="display_name" readonly="1"/></h1>
+                        </div>
+                        <group>
+                            <group name="main" string="Link">
+                                <field name="transaction_id"/>
+                                <field name="link_type"/>
+                                <field name="state" widget="badge"
+                                       decoration-info="state == 'pending'"
+                                       decoration-warning="state == 'draft'"
+                                       decoration-success="state == 'posted'"
+                                       decoration-danger="state == 'error'"/>
+                                <field name="integration_key"/>
+                                <field name="retry_count"/>
+                                <field name="last_sync_date"/>
+                            </group>
+                            <group name="payment" string="Payment Mirror (informational)">
+                                <field name="payment_state" widget="badge"
+                                       decoration-success="payment_state in ('paid', 'in_payment')"
+                                       decoration-info="payment_state == 'not_paid'"/>
+                                <field name="payment_date"/>
+                                <field name="payment_reference"/>
+                            </group>
+                            <group name="amounts_source" string="Source Invoice (Seller)">
+                                <field name="source_currency_id" invisible="1"/>
+                                <field name="source_document_name"/>
+                                <field name="source_amount_total"/>
+                            </group>
+                            <group name="amounts_target" string="Vendor Bill (Buyer)">
+                                <field name="target_currency_id" invisible="1"/>
+                                <field name="target_document_name"/>
+                                <field name="target_amount_total"/>
+                                <field name="exchange_rate" invisible="exchange_rate == 1.0"/>
+                            </group>
+                        </group>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_intercompany_move_link" model="ir.actions.act_window">
+            <field name="name">Invoice Links</field>
+            <field name="res_model">intercompany.move.link</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+    </data>
+</odoo>

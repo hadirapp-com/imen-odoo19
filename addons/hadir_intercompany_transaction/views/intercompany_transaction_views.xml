@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_intercompany_transaction_list" model="ir.ui.view">
+            <field name="name">intercompany.transaction.list</field>
+            <field name="model">intercompany.transaction</field>
+            <field name="arch" type="xml">
+                <list decoration-danger="sync_state == 'error'"
+                      decoration-muted="sync_state == 'cancelled'"
+                      decoration-success="sync_state == 'fully_invoiced'">
+                    <field name="name"/>
+                    <field name="source_company_id"/>
+                    <field name="target_company_id"/>
+                    <field name="source_reference"/>
+                    <field name="target_reference" optional="show"/>
+                    <field name="source_amount_total" widget="monetary"
+                           options="{'currency_field': 'source_currency_id'}"/>
+                    <field name="source_currency_id" optional="hide"/>
+                    <field name="sync_state" widget="badge"
+                           decoration-info="sync_state in ('draft', 'quotation_created', 'quotation_sent')"
+                           decoration-warning="sync_state in ('so_confirmed', 'partially_invoiced')"
+                           decoration-success="sync_state == 'fully_invoiced'"
+                           decoration-danger="sync_state == 'error'"/>
+                    <field name="last_sync_date" optional="show"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_intercompany_transaction_search" model="ir.ui.view">
+            <field name="name">intercompany.transaction.search</field>
+            <field name="model">intercompany.transaction</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="source_reference"/>
+                    <field name="target_reference"/>
+                    <field name="integration_key"/>
+                    <filter name="errors" string="Errors" domain="[('sync_state', '=', 'error')]"/>
+                    <filter name="pending_quotation" string="Quotation Pending"
+                            domain="[('sync_state', 'in', ('draft', 'quotation_created', 'quotation_sent'))]"/>
+                    <filter name="invoicing" string="Invoicing In Progress"
+                            domain="[('sync_state', 'in', ('so_confirmed', 'partially_invoiced'))]"/>
+                    <separator/>
+                    <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_state" string="Sync State" context="{'group_by': 'sync_state'}"/>
+                        <filter name="group_source" string="Buyer Company" context="{'group_by': 'source_company_id'}"/>
+                        <filter name="group_target" string="Seller Company" context="{'group_by': 'target_company_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_intercompany_transaction_form" model="ir.ui.view">
+            <field name="name">intercompany.transaction.form</field>
+            <field name="model">intercompany.transaction</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="action_sync_now" type="object" string="Sync Now"
+                                class="btn-primary"
+                                invisible="sync_state not in ('draft', 'error')"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                            <button name="action_open_source_po" type="object" class="oe_stat_button"
+                                    icon="fa-shopping-cart" invisible="not can_open_source_documents">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">RFQ</span>
+                                    <span class="o_stat_value"><field name="source_reference"/></span>
+                                </div>
+                            </button>
+                            <button name="action_open_target_so" type="object" class="oe_stat_button"
+                                    icon="fa-tags"
+                                    invisible="not can_open_target_documents or not target_so_id">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_text">Sales Order</span>
+                                    <span class="o_stat_value"><field name="target_reference"/></span>
+                                </div>
+                            </button>
+                            <button name="action_open_move_links" type="object" class="oe_stat_button"
+                                    icon="fa-file-text-o">
+                                <div class="o_stat_info">
+                                    <span class="o_stat_value"><field name="move_link_count"/></span>
+                                    <span class="o_stat_text">Invoices</span>
+                                </div>
+                            </button>
+                            <button name="action_open_sync_logs" type="object" class="oe_stat_button"
+                                    icon="fa-history">
+                                <span class="o_stat_text">Sync Log</span>
+                            </button>
+                        </div>
+                        <div class="alert alert-danger" role="alert" invisible="not sync_error">
+                            <field name="sync_error"/>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="name" readonly="1"/></h1>
+                        </div>
+                        <group>
+                            <group name="main" string="Route">
+                                <field name="active" invisible="1"/>
+                                <field name="route_id" options="{'no_open': True}"/>
+                                <field name="source_company_id"/>
+                                <field name="target_company_id"/>
+                                <field name="sync_state" widget="badge"
+                                       decoration-info="sync_state in ('draft', 'quotation_created', 'quotation_sent')"
+                                       decoration-warning="sync_state in ('so_confirmed', 'partially_invoiced')"
+                                       decoration-success="sync_state == 'fully_invoiced'"
+                                       decoration-danger="sync_state == 'error'"/>
+                                <field name="integration_key"/>
+                            </group>
+                            <group name="sync" string="Synchronization">
+                                <field name="source_reference"/>
+                                <field name="target_reference"/>
+                                <field name="last_sync_date"/>
+                                <field name="last_sync_user_id" widget="many2one_avatar_user"/>
+                                <field name="retry_count"/>
+                            </group>
+                            <group name="amounts_source" string="Buyer Side (RFQ)">
+                                <field name="source_currency_id" invisible="1"/>
+                                <field name="source_amount_untaxed"/>
+                                <field name="source_amount_tax"/>
+                                <field name="source_amount_total" class="fw-bold"/>
+                            </group>
+                            <group name="amounts_target" string="Seller Side (SO)">
+                                <field name="target_currency_id" invisible="1"/>
+                                <field name="target_amount_untaxed"/>
+                                <field name="target_amount_tax"/>
+                                <field name="target_amount_total" class="fw-bold"/>
+                                <field name="exchange_rate" invisible="exchange_rate == 1.0"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="lines" string="Lines Snapshot">
+                                <field name="line_ids" readonly="1">
+                                    <list>
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="source_product_name" string="Product (Buyer)"/>
+                                        <field name="source_default_code" optional="show"/>
+                                        <field name="source_qty"/>
+                                        <field name="source_uom" optional="hide"/>
+                                        <field name="source_price_unit" widget="monetary"
+                                               options="{'currency_field': 'source_currency_id'}"/>
+                                        <field name="source_subtotal" widget="monetary"
+                                               options="{'currency_field': 'source_currency_id'}"/>
+                                        <field name="source_tax_desc" optional="show"/>
+                                        <field name="target_product_name" string="Product (Seller)"/>
+                                        <field name="target_qty"/>
+                                        <field name="target_price_unit" widget="monetary"
+                                               options="{'currency_field': 'target_currency_id'}"/>
+                                        <field name="target_subtotal" widget="monetary"
+                                               options="{'currency_field': 'target_currency_id'}"/>
+                                        <field name="target_tax_desc" optional="show"/>
+                                        <field name="source_currency_id" column_invisible="1"/>
+                                        <field name="target_currency_id" column_invisible="1"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page name="links" string="Invoice Links">
+                                <field name="move_link_ids" readonly="1" context="{'default_transaction_id': id}">
+                                    <list>
+                                        <field name="link_type"/>
+                                        <field name="source_document_name"/>
+                                        <field name="target_document_name"/>
+                                        <field name="state" widget="badge"
+                                               decoration-info="state == 'pending'"
+                                               decoration-warning="state == 'draft'"
+                                               decoration-success="state == 'posted'"
+                                               decoration-danger="state == 'error'"/>
+                                        <field name="payment_state" widget="badge"
+                                               decoration-success="payment_state in ('paid', 'in_payment')"
+                                               decoration-info="payment_state == 'not_paid'"
+                                               optional="show"/>
+                                        <field name="source_amount_total" widget="monetary"
+                                               options="{'currency_field': 'source_currency_id'}"
+                                               optional="show"/>
+                                        <field name="target_amount_total" widget="monetary"
+                                               options="{'currency_field': 'target_currency_id'}"
+                                               optional="show"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page name="revisions" string="Quotation Revisions">
+                                <field name="revision_ids" readonly="1">
+                                    <list>
+                                        <field name="revision_seq"/>
+                                        <field name="date"/>
+                                        <field name="amount_total" widget="monetary"
+                                               options="{'currency_field': 'currency_id'}"/>
+                                        <field name="note"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_intercompany_transaction" model="ir.actions.act_window">
+            <field name="name">Transactions</field>
+            <field name="res_model">intercompany.transaction</field>
+            <field name="view_mode">list,form</field>
+            <field name="context">{'search_default_errors': 0}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">No intercompany transaction yet</p>
+                <p>Create a purchase RFQ to a vendor that is another company of this
+                   database, then use "Send to Intercompany" on the RFQ.</p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

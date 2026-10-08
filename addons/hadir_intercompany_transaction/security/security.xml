@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="module_category_intercompany" model="ir.module.category">
+            <field name="name">Intercompany</field>
+            <field name="description">Access rights for the intercompany transaction bridge.</field>
+            <field name="sequence">26</field>
+        </record>
+
+        <record id="privilege_intercompany" model="res.groups.privilege">
+            <field name="name">Intercompany</field>
+            <field name="category_id" ref="module_category_intercompany"/>
+            <field name="sequence">26</field>
+            <field name="description">Follow and operate intercompany transaction bridges.</field>
+        </record>
+
+        <record id="group_intercompany_user" model="res.groups">
+            <field name="name">Intercompany / User</field>
+            <field name="privilege_id" ref="privilege_intercompany"/>
+            <field name="sequence">10</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Read-only on bridges and logs; can trigger synchronization
+                actions. Business documents are always created by the company integration
+                users, never by the clicking user.</field>
+        </record>
+
+        <record id="group_intercompany_manager" model="res.groups">
+            <field name="name">Intercompany / Manager</field>
+            <field name="privilege_id" ref="privilege_intercompany"/>
+            <field name="sequence">20</field>
+            <field name="implied_ids" eval="[(4, ref('group_intercompany_user'))]"/>
+            <field name="comment">Configures routes, integration users and product/tax
+                mappings. Sync logs stay read-only even for managers (audit).</field>
+        </record>
+
+        <!-- The bridge is the ONLY object readable across companies. company_id is
+             not set on it; this global record rule limits visibility to users who
+             belong to at least one of the two involved companies. -->
+        <record id="rule_intercompany_transaction" model="ir.rule">
+            <field name="name">Intercompany Transaction: involved companies only</field>
+            <field name="model_id" ref="model_intercompany_transaction"/>
+            <field name="domain_force">['|', ('source_company_id', 'in', company_ids), ('target_company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_intercompany_transaction_line" model="ir.rule">
+            <field name="name">Intercompany Transaction Line: involved companies only</field>
+            <field name="model_id" ref="model_intercompany_transaction_line"/>
+            <field name="domain_force">['|', ('transaction_id.source_company_id', 'in', company_ids), ('transaction_id.target_company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_intercompany_quotation_revision" model="ir.rule">
+            <field name="name">Intercompany Quotation Revision: involved companies only</field>
+            <field name="model_id" ref="model_intercompany_quotation_revision"/>
+            <field name="domain_force">['|', ('transaction_id.source_company_id', 'in', company_ids), ('transaction_id.target_company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_intercompany_move_link" model="ir.rule">
+            <field name="name">Intercompany Move Link: involved companies only</field>
+            <field name="model_id" ref="model_intercompany_move_link"/>
+            <field name="domain_force">['|', ('transaction_id.source_company_id', 'in', company_ids), ('transaction_id.target_company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_intercompany_sync_log" model="ir.rule">
+            <field name="name">Intercompany Sync Log: involved companies only</field>
+            <field name="model_id" ref="model_intercompany_sync_log"/>
+            <field name="domain_force">['|', ('source_company_id', 'in', company_ids), ('target_company_id', 'in', company_ids)]</field>
+        </record>
+
+    </data>
+</odoo>

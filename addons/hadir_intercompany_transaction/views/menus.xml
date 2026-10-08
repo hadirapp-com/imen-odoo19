@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <menuitem id="menu_intercompany_root"
+                  name="Intercompany"
+                  sequence="65"
+                  groups="hadir_intercompany_transaction.group_intercompany_user"/>
+
+        <menuitem id="menu_intercompany_transactions"
+                  name="Transactions"
+                  parent="menu_intercompany_root"
+                  action="action_intercompany_transaction"
+                  sequence="10"/>
+
+        <menuitem id="menu_intercompany_sync_logs"
+                  name="Sync Logs"
+                  parent="menu_intercompany_root"
+                  action="action_intercompany_sync_log"
+                  sequence="20"/>
+
+        <menuitem id="menu_intercompany_configuration"
+                  name="Configuration"
+                  parent="menu_intercompany_root"
+                  groups="hadir_intercompany_transaction.group_intercompany_manager"
+                  sequence="90"/>
+
+        <menuitem id="menu_intercompany_routes"
+                  name="Routes"
+                  parent="menu_intercompany_configuration"
+                  action="action_intercompany_route"
+                  sequence="10"/>
+
+        <menuitem id="menu_intercompany_product_mappings"
+                  name="Product Mappings"
+                  parent="menu_intercompany_configuration"
+                  action="action_intercompany_product_mapping"
+                  sequence="20"/>
+
+        <menuitem id="menu_intercompany_tax_mappings"
+                  name="Tax Mappings"
+                  parent="menu_intercompany_configuration"
+                  action="action_intercompany_tax_mapping"
+                  sequence="30"/>
+
+    </data>
+</odoo>

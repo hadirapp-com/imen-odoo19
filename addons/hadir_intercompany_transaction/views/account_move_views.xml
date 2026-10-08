@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_move_form_intercompany" model="ir.ui.view">
+            <field name="name">account.move.form.intercompany</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <button name="action_view_intercompany" type="object" class="oe_stat_button"
+                            icon="fa-exchange"
+                            groups="hadir_intercompany_transaction.group_intercompany_user"
+                            invisible="not intercompany_move_link_id">
+                        <span class="o_stat_text">Intercompany</span>
+                    </button>
+                </xpath>
+                <xpath expr="//notebook" position="inside">
+                    <page name="intercompany" string="Intercompany"
+                          groups="hadir_intercompany_transaction.group_intercompany_user"
+                          invisible="not intercompany_move_link_id">
+                        <group>
+                            <field name="intercompany_move_link_id"/>
+                        </group>
+                        <div class="text-muted">
+                            The bridge link holds the counterpart document reference, the
+                            payment status mirror and the synchronization history.
+                        </div>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
