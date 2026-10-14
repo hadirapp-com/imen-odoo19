@@ -1,5 +1,5 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 
 BOOKING_STATES = [
     ('draft', 'Draft'),
@@ -568,6 +568,12 @@ class UmrahBooking(models.Model):
         self.ensure_one()
         if not self.sale_order_id:
             raise UserError(_('No sales order linked to this booking.'))
+        try:
+            self.sale_order_id.check_access('read')
+        except AccessError:
+            raise UserError(_(
+                'You do not have access to sales orders. '
+                'Contact your administrator to get the Sales access right.'))
         return {
             'type': 'ir.actions.act_window',
             'name': _('Sales Order'),

@@ -38,13 +38,19 @@ class SaleOrder(models.Model):
 
     def action_create_umrah_booking(self):
         self.ensure_one()
+        package_line = self.order_line.filtered(
+            lambda l: not l.display_type and l.product_id.is_umrah_package)[:1]
         return {
             'type': 'ir.actions.act_window',
-            'name': _('Create Umrah Booking'),
-            'res_model': 'umrah.booking.create.wizard',
+            'name': _('New Umrah Booking'),
+            'res_model': 'umrah.booking',
             'view_mode': 'form',
-            'target': 'new',
+            'target': 'current',
             'context': {
                 'default_sale_order_id': self.id,
+                'default_partner_id': self.partner_id.id,
+                'default_product_id': package_line.product_id.product_tmpl_id.id,
+                'default_user_id': self.user_id.id or self.env.uid,
+                'default_company_id': self.company_id.id,
             },
         }
