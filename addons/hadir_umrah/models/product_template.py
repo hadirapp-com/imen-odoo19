@@ -9,6 +9,14 @@ class ProductTemplate(models.Model):
         index=True,
         help='Mark this product as an Umrah package. It becomes selectable '
              'on Umrah bookings and appears under Travel > Configuration > Umrah Packages.')
+    umrah_departure_date = fields.Date(
+        string='Departure Date',
+        help='Default departure date proposed on sales orders and umrah '
+             'bookings created with this package.')
+    umrah_return_date = fields.Date(
+        string='Return Date',
+        help='Default return date proposed on sales orders and umrah '
+             'bookings created with this package.')
     document_template_id = fields.Many2one(
         'umrah.document.template',
         string='Document Template',

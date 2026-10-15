@@ -110,6 +110,14 @@ class UmrahBooking(models.Model):
         default=lambda self: self.env.company, index=True)
     notes = fields.Text()
 
+    @api.onchange('product_id')
+    def _onchange_product_id_dates(self):
+        for booking in self:
+            if booking.product_id.umrah_departure_date and not booking.departure_date:
+                booking.departure_date = booking.product_id.umrah_departure_date
+            if booking.product_id.umrah_return_date and not booking.return_date:
+                booking.return_date = booking.product_id.umrah_return_date
+
     @api.depends('pilgrim_ids', 'document_ids.state', 'document_ids.required')
     def _compute_counts(self):
         for booking in self:

@@ -4,11 +4,26 @@ from odoo import _, api, fields, models
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    umrah_departure_date = fields.Date(string='Departure Date')
+    umrah_return_date = fields.Date(string='Return Date')
     umrah_booking_ids = fields.One2many(
         'umrah.booking', 'sale_order_id', string='Umrah Bookings')
     umrah_booking_count = fields.Integer(
         string='Booking Count',
         compute='_compute_umrah_booking_count')
+
+    @api.onchange('order_line', 'order_line.product_id')
+    def _onchange_order_line_umrah_dates(self):
+        for order in self:
+            package_line = order.order_line.filtered(
+                lambda l: not l.display_type and l.product_id.is_umrah_package)[:1]
+            if not package_line:
+                continue
+            package = package_line.product_id.product_tmpl_id
+            if package.umrah_departure_date and not order.umrah_departure_date:
+                order.umrah_departure_date = package.umrah_departure_date
+            if package.umrah_return_date and not order.umrah_return_date:
+                order.umrah_return_date = package.umrah_return_date
 
     @api.depends('umrah_booking_ids')
     def _compute_umrah_booking_count(self):
@@ -40,6 +55,7 @@ class SaleOrder(models.Model):
         self.ensure_one()
         package_line = self.order_line.filtered(
             lambda l: not l.display_type and l.product_id.is_umrah_package)[:1]
+        package = package_line.product_id.product_tmpl_id if package_line else self.env['product.template']
         return {
             'type': 'ir.actions.act_window',
             'name': _('New Umrah Booking'),
@@ -49,7 +65,9 @@ class SaleOrder(models.Model):
             'context': {
                 'default_sale_order_id': self.id,
                 'default_partner_id': self.partner_id.id,
-                'default_product_id': package_line.product_id.product_tmpl_id.id,
+                'default_product_id': package.id,
+                'default_departure_date': self.umrah_departure_date or package.umrah_departure_date,
+                'default_return_date': self.umrah_return_date or package.umrah_return_date,
                 'default_user_id': self.user_id.id or self.env.uid,
                 'default_company_id': self.company_id.id,
             },

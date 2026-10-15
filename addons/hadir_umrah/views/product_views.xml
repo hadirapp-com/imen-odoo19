@@ -10,6 +10,10 @@
                     <field name="is_umrah_package"/>
                     <field name="document_template_id"
                            invisible="not is_umrah_package"/>
+                    <field name="umrah_departure_date"
+                           invisible="not is_umrah_package"/>
+                    <field name="umrah_return_date"
+                           invisible="not is_umrah_package"/>
                 </xpath>
             </field>
         </record>

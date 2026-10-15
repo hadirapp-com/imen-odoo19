@@ -152,7 +152,8 @@
                     No pilgrims yet
                 </p>
                 <p>
-                    Pilgrims are usually created from the "Create Umrah Booking" wizard.
+                    Pilgrims are usually added from the booking form (tab Jamaah/Pilgrims)
+                    or from the Pilgrims list of the booking.
                 </p>
             </field>
         </record>

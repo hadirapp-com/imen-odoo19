@@ -24,8 +24,6 @@ access_umrah_manasik_attendance_visa,umrah.manasik.attendance visa,model_umrah_m
 access_umrah_task_type_user,umrah.task.type user,model_umrah_task_type,group_umrah_user,1,1,1,1
 access_umrah_flight_user,umrah.flight user,model_umrah_flight,group_umrah_user,1,1,1,1
 access_umrah_flight_finance,umrah.flight finance,model_umrah_flight,group_umrah_finance,1,0,0,0
-access_umrah_booking_wizard_user,umrah.booking.create.wizard user,model_umrah_booking_create_wizard,group_umrah_user,1,1,1,1
-access_umrah_booking_wizard_line_user,umrah.booking.create.wizard.line user,model_umrah_booking_create_wizard_line,group_umrah_user,1,1,1,1
 access_umrah_booking_portal,umrah.booking portal,model_umrah_booking,base.group_portal,1,0,0,0
 access_umrah_pilgrim_portal,umrah.pilgrim portal,model_umrah_pilgrim,base.group_portal,1,0,0,0
 access_umrah_document_portal,umrah.document portal,model_umrah_document,base.group_portal,1,0,0,0

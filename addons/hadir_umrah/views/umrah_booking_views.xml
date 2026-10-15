@@ -387,7 +387,8 @@
                     Create your first Umrah booking
                 </p>
                 <p>
-                    Confirm a sales order, then use "Create Umrah Booking" to open the wizard.
+                    Confirm a sales order, then use "Create Umrah Booking" — customer,
+                    sales order, package and dates are proposed automatically.
                 </p>
             </field>
         </record>
