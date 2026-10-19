@@ -44,6 +44,10 @@ class UmrahVisa(models.Model):
     attachment_ids = fields.Many2many(
         'ir.attachment', string='Attachments',
         help='Visa scan or approval file.')
+    attachment_count = fields.Integer(
+        string='Attachment Count', compute='_compute_counts')
+    pilgrim_document_count = fields.Integer(
+        string='Pilgrim Document Count', compute='_compute_counts')
     notes = fields.Text()
     company_id = fields.Many2one(
         related='booking_id.company_id', store=True, index=True, readonly=True)
@@ -69,6 +73,34 @@ class UmrahVisa(models.Model):
     def _compute_state_label(self):
         for visa in self:
             visa.state_label = dict(VISA_STATES).get(visa.state, visa.state)
+
+    @api.depends('attachment_ids', 'pilgrim_id.document_ids')
+    def _compute_counts(self):
+        for visa in self:
+            visa.attachment_count = len(visa.attachment_ids)
+            visa.pilgrim_document_count = len(visa.pilgrim_id.document_ids)
+
+    def action_attach_document(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Visa - %s', self.pilgrim_id.full_name),
+            'res_model': 'umrah.visa',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    def action_view_pilgrim_documents(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Documents - %s', self.pilgrim_id.full_name),
+            'res_model': 'umrah.document',
+            'view_mode': 'list,form',
+            'domain': [('pilgrim_id', '=', self.pilgrim_id.id)],
+            'context': {'default_pilgrim_id': self.pilgrim_id.id},
+        }
 
     def action_notify_pilgrim(self):
         for visa in self:

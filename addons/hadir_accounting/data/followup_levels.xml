@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="followup_level_first" model="hadir.followup.level">
+            <field name="name">Pengingat Pertama (15 hari)</field>
+            <field name="delay_days">15</field>
+            <field name="email_template_id" ref="mail_template_hadir_followup_default"/>
+            <field name="auto_send" eval="False"/>
+            <field name="create_activity" eval="True"/>
+            <field name="notes">Pengingat halus untuk pelanggan dengan tunggakan 15+ hari.</field>
+        </record>
+        <record id="followup_level_second" model="hadir.followup.level">
+            <field name="name">Pengingat Kedua (30 hari)</field>
+            <field name="delay_days">30</field>
+            <field name="email_template_id" ref="mail_template_hadir_followup_default"/>
+            <field name="auto_send" eval="False"/>
+            <field name="create_activity" eval="True"/>
+            <field name="notes">Tunggakan 30+ hari: tindak lanjut telepon disarankan.</field>
+        </record>
+        <record id="followup_level_third" model="hadir.followup.level">
+            <field name="name">Peringatan Akhir (45 hari)</field>
+            <field name="delay_days">45</field>
+            <field name="email_template_id" ref="mail_template_hadir_followup_default"/>
+            <field name="auto_send" eval="False"/>
+            <field name="create_activity" eval="True"/>
+            <field name="notes">Tunggakan 45+ hari: eskalasi ke manajemen / penahanan pengiriman.</field>
+        </record>
+    </data>
+</odoo>

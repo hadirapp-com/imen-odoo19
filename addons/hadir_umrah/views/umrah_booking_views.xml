@@ -252,6 +252,16 @@
                                                decoration-info="state in ('draft', 'submitted', 'processing')"
                                                decoration-success="state == 'approved'"
                                                decoration-danger="state in ('rejected', 'expired')"/>
+                                        <field name="attachment_count" column_invisible="1"/>
+                                        <field name="pilgrim_document_count" column_invisible="1"/>
+                                        <button name="action_attach_document" type="object"
+                                                string="Attach" icon="fa-paperclip"
+                                                class="btn-link"
+                                                invisible="not id"/>
+                                        <button name="action_view_pilgrim_documents" type="object"
+                                                string="View Doc" icon="fa-folder-open"
+                                                class="btn-link"
+                                                invisible="pilgrim_document_count == 0 or not id"/>
                                     </list>
                                 </field>
                             </page>
@@ -280,6 +290,9 @@
                                         <field name="flight_type"/>
                                         <field name="airline"/>
                                         <field name="flight_number"/>
+                                        <field name="pilgrim_ids" widget="many2many_tags"
+                                               domain="[('booking_id', '=', parent.id)]"
+                                               options="{'no_create': True}"/>
                                         <field name="departure_airport"/>
                                         <field name="departure_datetime"/>
                                         <field name="arrival_airport" optional="show"/>

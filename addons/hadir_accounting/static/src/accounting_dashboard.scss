@@ -1,0 +1,122 @@
+.o_hadir_dashboard {
+    padding: 16px;
+    max-width: 1280px;
+
+    .o_hadir_dashboard_loading {
+        display: flex;
+        justify-content: center;
+        padding: 80px 0;
+    }
+
+    .o_hadir_dashboard_header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 12px;
+
+        h4 {
+            margin: 0;
+            font-weight: 700;
+        }
+    }
+
+    .o_hadir_dashboard_grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 12px;
+    }
+
+    .o_hadir_card {
+        background-color: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        padding: 12px 16px;
+        cursor: default;
+
+        &.o_hadir_card_wide {
+            grid-column: span 2;
+        }
+    }
+
+    .o_hadir_card_title {
+        font-weight: 600;
+        margin-bottom: 8px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        padding-bottom: 6px;
+    }
+
+    .o_hadir_balance_row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 0;
+
+        .o_hadir_balance_name {
+            width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .o_hadir_balance_bar {
+            flex: 1;
+            height: 10px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 5px;
+            overflow: hidden;
+
+            .o_hadir_balance_bar_inner {
+                display: block;
+                height: 100%;
+                background-color: #714b67;
+                border-radius: 5px;
+            }
+        }
+
+        .o_hadir_balance_amount {
+            min-width: 120px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+    }
+
+    .o_hadir_kpi {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: 5px 0;
+
+        .o_hadir_kpi_value {
+            font-size: 17px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .o_hadir_kpi_label {
+            color: #666;
+            font-size: 12px;
+        }
+
+        &.o_hadir_kpi_danger .o_hadir_kpi_value {
+            color: #c63737;
+        }
+    }
+
+    .o_hadir_links {
+        margin-top: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .o_hadir_link_btn {
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background-color: #fff;
+            border-radius: 6px;
+            padding: 6px 14px;
+
+            &:hover {
+                background-color: rgba(0, 0, 0, 0.04);
+            }
+        }
+    }
+}

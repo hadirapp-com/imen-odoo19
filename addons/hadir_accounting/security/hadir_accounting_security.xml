@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Odoo 19 Community leaves account.group_account_readonly unimplied (only
+         EE account_accountant activates it), hiding Chart of Accounts, Journal
+         Entries, Financial Reports... from accounting admins. Mirror the EE chain. -->
+    <record id="account.group_account_manager" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('account.group_account_readonly'))]"/>
+    </record>
+
+    <record id="hadir_asset_company_rule" model="ir.rule">
+        <field name="name">Asset / Deferred Entry: multi-company</field>
+        <field name="model_id" ref="model_account_asset"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="hadir_budget_company_rule" model="ir.rule">
+        <field name="name">Budget: multi-company</field>
+        <field name="model_id" ref="model_account_budget"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="hadir_budget_line_company_rule" model="ir.rule">
+        <field name="name">Budget Line: multi-company</field>
+        <field name="model_id" ref="model_account_budget_line"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="hadir_followup_level_company_rule" model="ir.rule">
+        <field name="name">Follow-up Level: multi-company</field>
+        <field name="model_id" ref="model_hadir_followup_level"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

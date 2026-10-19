@@ -1,0 +1,15 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hadir_asset_readonly,account.asset readonly,model_account_asset,account.group_account_readonly,1,0,0,0
+access_hadir_asset_user,account.asset accountant,model_account_asset,account.group_account_user,1,1,1,1
+access_hadir_asset_manager,account.asset manager,model_account_asset,account.group_account_manager,1,1,1,1
+access_hadir_budget_readonly,account.budget readonly,model_account_budget,account.group_account_readonly,1,0,0,0
+access_hadir_budget_user,account.budget accountant,model_account_budget,account.group_account_user,1,1,1,1
+access_hadir_budget_manager,account.budget manager,model_account_budget,account.group_account_manager,1,1,1,1
+access_hadir_budget_line_readonly,account.budget.line readonly,model_account_budget_line,account.group_account_readonly,1,0,0,0
+access_hadir_budget_line_user,account.budget.line accountant,model_account_budget_line,account.group_account_user,1,1,1,1
+access_hadir_budget_line_manager,account.budget.line manager,model_account_budget_line,account.group_account_manager,1,1,1,1
+access_hadir_followup_level_readonly,hadir.followup.level readonly,model_hadir_followup_level,account.group_account_readonly,1,0,0,0
+access_hadir_followup_level_user,hadir.followup.level accountant,model_hadir_followup_level,account.group_account_user,1,1,1,1
+access_hadir_followup_level_manager,hadir.followup.level manager,model_hadir_followup_level,account.group_account_manager,1,1,1,1
+access_hadir_asset_dispose,hadir.asset.dispose accountant,model_hadir_asset_dispose,account.group_account_user,1,1,1,1
+access_hadir_asset_dispose_manager,hadir.asset.dispose manager,model_hadir_asset_dispose,account.group_account_manager,1,1,1,1

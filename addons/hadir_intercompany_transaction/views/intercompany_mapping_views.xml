@@ -25,7 +25,7 @@
                     <field name="target_product_id"/>
                     <field name="route_id"/>
                     <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>
-                    <group expand="0" string="Group By">
+                    <group>
                         <filter name="group_route" string="Route" context="{'group_by': 'route_id'}"/>
                         <filter name="group_direction" string="Direction" context="{'group_by': 'direction'}"/>
                     </group>
@@ -62,7 +62,7 @@
                     <field name="target_tax_id"/>
                     <field name="route_id"/>
                     <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>
-                    <group expand="0" string="Group By">
+                    <group>
                         <filter name="group_route" string="Route" context="{'group_by': 'route_id'}"/>
                         <filter name="group_direction" string="Direction" context="{'group_by': 'direction'}"/>
                     </group>

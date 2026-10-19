@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_company_form_hadir_consolidation" model="ir.ui.view">
+        <field name="name">res.company.form.hadir.consolidation</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <page name="branches" position="after">
+                <page string="Konsolidasi" name="hadir_consolidation">
+                    <group>
+                        <group>
+                            <field name="hadir_is_head_office"/>
+                            <field name="hadir_branch_ids"
+                                   invisible="not hadir_is_head_office"
+                                   widget="many2many_tags"
+                                   domain="[('id', '!=', id), ('hadir_is_head_office', '=', False)]"/>
+                        </group>
+                        <group>
+                            <field name="hadir_consolidation_company_ids"
+                                   widget="many2many_tags"
+                                   invisible="not hadir_is_head_office"/>
+                        </group>
+                    </group>
+                </page>
+            </page>
+        </field>
+    </record>
+</odoo>

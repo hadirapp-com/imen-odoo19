@@ -1,0 +1,243 @@
+// EE-19-style accounting report layout.
+//
+// .hpr-report is a direct child of .o_action, which Odoo 19 renders as
+// height:100%; display:flex; column; overflow:auto. The component fills that
+// height with its own flex column: the toolbar lives OUTSIDE the scroll area
+// (so it can wrap/grow without ever overlapping the table) and .hpr-content
+// owns the scrolling, which also keeps the sticky table headers independent
+// of the toolbar height.
+
+.hpr-report {
+    --hpr-periodrow-h: 30px;
+    --hpr-border: #d9d9d9;
+    --hpr-border-strong: #666;
+
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .hpr-loading {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .hpr-error {
+        margin: 16px;
+        flex: none;
+    }
+
+    // ------------------------------------------------------------------
+    // Toolbar (outside the scroll area)
+    // ------------------------------------------------------------------
+
+    .hpr-header {
+        flex: none;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        min-height: 49px;
+        padding: 8px 16px;
+        background-color: #fff;
+        border-bottom: 1px solid var(--hpr-border);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .hpr-report-name {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 20px;
+        color: inherit;
+        padding: 5px 10px;
+
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+        }
+    }
+
+    .hpr-header-filters {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1 1 auto;
+        min-width: 0;
+        flex-wrap: wrap;
+    }
+
+    .hpr-pill {
+        border: 1px solid var(--hpr-border);
+        background-color: #fff;
+        border-radius: 6px;
+        padding: 5px 12px;
+        line-height: 20px;
+        font-size: 13px;
+        color: inherit;
+        white-space: nowrap;
+
+        &:hover {
+            background-color: #f2f2f2;
+        }
+
+        &:active {
+            background-color: #e8e8e8;
+        }
+    }
+
+    .hpr-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+    }
+
+    // Dropdown panels
+    .hpr-dropdown-panel {
+        min-width: 280px;
+        padding: 4px 0;
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+
+        &.hpr-dropdown-panel--scroll {
+            max-height: 340px;
+            overflow-y: auto;
+        }
+    }
+
+    .hpr-dropdown-title {
+        padding: 6px 16px 2px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #8f8f8f;
+    }
+
+    .hpr-dropdown-section {
+        padding: 4px 16px;
+    }
+
+    .dropdown-item.active {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .hpr-number-input {
+        width: 64px;
+    }
+
+    // ------------------------------------------------------------------
+    // Table (scrolls inside .hpr-content)
+    // ------------------------------------------------------------------
+
+    .hpr-content {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+    }
+
+    table.hpr-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 13px;
+
+        thead {
+            th {
+                position: sticky;
+                z-index: 10;
+                background-color: #fff;
+                border: none;
+                border-bottom: 1px solid var(--hpr-border);
+            }
+
+            .hpr-thead-periods th {
+                top: 0;
+                height: var(--hpr-periodrow-h);
+                padding: 5px 8px 4px;
+                font-weight: 600;
+                font-size: 13px;
+                color: inherit;
+                white-space: nowrap;
+            }
+
+            .hpr-thead-col,
+            .hpr-thead-name {
+                top: var(--hpr-periodrow-h);
+                padding: 3px 8px 6px;
+                font-weight: 400;
+                font-size: 12px;
+                color: #7c7c7c;
+                border-bottom: 1px solid var(--hpr-border-strong);
+            }
+        }
+
+        tbody {
+            tr {
+                &:hover:not(.hpr-row--title) {
+                    background-color: rgba(0, 0, 0, 0.035);
+                }
+
+                &.hpr-row--clickable {
+                    cursor: pointer;
+                }
+
+                &.hpr-row--title td {
+                    font-weight: 600;
+                    padding-top: 10px;
+                }
+
+                &.hpr-row--total td {
+                    font-weight: 700;
+                    border-top: 1px solid var(--hpr-border-strong);
+                }
+
+                &.hpr-row--aml td {
+                    font-size: 12px;
+                    color: #6b6b6b;
+                }
+            }
+
+            td {
+                padding: 3px 8px;
+                height: 26px;
+                border: none;
+            }
+        }
+
+        .hpr-block-start {
+            border-left: 1px solid #e4e4e4;
+        }
+
+        .hpr-thead-corner {
+            text-align: left;
+            vertical-align: bottom;
+            font-weight: 400;
+        }
+
+        .hpr-cell--name {
+            max-width: 460px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .hpr-fold-icon {
+            display: inline-block;
+            width: 14px;
+            margin-right: 6px;
+            color: #8f8f8f;
+            font-size: 12px;
+        }
+
+        .hpr-cell--amount {
+            text-align: right;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+
+            &.hpr-cell--negative {
+                color: #d13438;
+            }
+        }
+    }
+}

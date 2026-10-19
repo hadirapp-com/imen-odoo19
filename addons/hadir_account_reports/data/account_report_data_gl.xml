@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- GENERAL LEDGER                                                 -->
+    <!-- ============================================================= -->
+    <record id="hpr_general_ledger" model="account.report">
+        <field name="name">General Ledger</field>
+        <field name="sequence">130</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="load_more_limit">20</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_show_draft" eval="True"/>
+        <field name="filter_period_comparison" eval="True"/>
+        <field name="filter_journals" eval="True"/>
+        <field name="column_ids">
+            <record id="hpr_gl_column_debit" model="account.report.column">
+                <field name="name">Debit</field>
+                <field name="expression_label">debit</field>
+                <field name="sequence">1</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_gl_column_credit" model="account.report.column">
+                <field name="name">Credit</field>
+                <field name="expression_label">credit</field>
+                <field name="sequence">2</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_gl_column_balance" model="account.report.column">
+                <field name="name">Balance</field>
+                <field name="expression_label">balance</field>
+                <field name="sequence">3</field>
+                <field name="figure_type">monetary</field>
+            </record>
+        </field>
+        <field name="line_ids">
+            <record id="hpr_gl_initial" model="account.report.line">
+                <field name="name">Initial Balance</field>
+                <field name="code">total_hpr_gl_initial</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">5</field>
+                <field name="hide_if_zero" eval="True"/>
+                <field name="expression_ids">
+                    <record id="hpr_gl_initial_debit" model="account.report.expression">
+                        <field name="label">debit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False)]</field>
+                        <field name="subformula">debit</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                    <record id="hpr_gl_initial_credit" model="account.report.expression">
+                        <field name="label">credit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False)]</field>
+                        <field name="subformula">credit</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                    <record id="hpr_gl_initial_balance" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False)]</field>
+                        <field name="subformula">balance</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                </field>
+            </record>
+            <record id="hpr_gl_root" model="account.report.line">
+                <field name="name">Journal Entries</field>
+                <field name="code">total_hpr_gl_root</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">10</field>
+                <field name="groupby">account_id</field>
+                <field name="foldable" eval="True"/>
+                <field name="expression_ids">
+                    <record id="hpr_gl_root_debit" model="account.report.expression">
+                        <field name="label">debit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False)]</field>
+                        <field name="subformula">debit</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                    <record id="hpr_gl_root_credit" model="account.report.expression">
+                        <field name="label">credit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False)]</field>
+                        <field name="subformula">credit</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                    <record id="hpr_gl_root_balance" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False)]</field>
+                        <field name="subformula">balance</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                </field>
+            </record>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- PARTNER LEDGER                                                 -->
+    <!-- ============================================================= -->
+    <record id="hpr_partner_ledger" model="account.report">
+        <field name="name">Partner Ledger</field>
+        <field name="sequence">140</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="load_more_limit">20</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_show_draft" eval="True"/>
+        <field name="filter_period_comparison" eval="True"/>
+        <field name="filter_journals" eval="True"/>
+        <field name="column_ids">
+            <record id="hpr_partner_ledger_column_debit" model="account.report.column">
+                <field name="name">Debit</field>
+                <field name="expression_label">debit</field>
+                <field name="sequence">1</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_partner_ledger_column_credit" model="account.report.column">
+                <field name="name">Credit</field>
+                <field name="expression_label">credit</field>
+                <field name="sequence">2</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_partner_ledger_column_balance" model="account.report.column">
+                <field name="name">Balance</field>
+                <field name="expression_label">balance</field>
+                <field name="sequence">3</field>
+                <field name="figure_type">monetary</field>
+            </record>
+        </field>
+        <field name="line_ids">
+            <record id="hpr_partner_ledger_initial" model="account.report.line">
+                <field name="name">Initial Balance</field>
+                <field name="code">total_hpr_partner_ledger_initial</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">5</field>
+                <field name="hide_if_zero" eval="True"/>
+                <field name="expression_ids">
+                    <record id="hpr_partner_ledger_initial_debit" model="account.report.expression">
+                        <field name="label">debit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('partner_id', '!=', False)]</field>
+                        <field name="subformula">debit</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                    <record id="hpr_partner_ledger_initial_credit" model="account.report.expression">
+                        <field name="label">credit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('partner_id', '!=', False)]</field>
+                        <field name="subformula">credit</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                    <record id="hpr_partner_ledger_initial_balance" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('partner_id', '!=', False)]</field>
+                        <field name="subformula">balance</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                </field>
+            </record>
+            <record id="hpr_partner_ledger_root" model="account.report.line">
+                <field name="name">Partners</field>
+                <field name="code">total_hpr_partner_ledger_root</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">10</field>
+                <field name="groupby">partner_id</field>
+                <field name="foldable" eval="True"/>
+                <field name="expression_ids">
+                    <record id="hpr_partner_ledger_root_debit" model="account.report.expression">
+                        <field name="label">debit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('partner_id', '!=', False)]</field>
+                        <field name="subformula">debit</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                    <record id="hpr_partner_ledger_root_credit" model="account.report.expression">
+                        <field name="label">credit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('partner_id', '!=', False)]</field>
+                        <field name="subformula">credit</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                    <record id="hpr_partner_ledger_root_balance" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('partner_id', '!=', False)]</field>
+                        <field name="subformula">balance</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                </field>
+            </record>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- AGED RECEIVABLE / AGED PAYABLE                                 -->
+    <!-- ============================================================= -->
+    <record id="hpr_aged_receivable" model="account.report">
+        <field name="name">Aged Receivable</field>
+        <field name="sequence">150</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_show_draft" eval="True"/>
+        <field name="column_ids">
+            <record id="hpr_ar_column_not_due" model="account.report.column">
+                <field name="name">Not Due Yet</field>
+                <field name="expression_label">not_due</field>
+                <field name="sequence">1</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ar_column_b1_30" model="account.report.column">
+                <field name="name">1-30</field>
+                <field name="expression_label">b1_30</field>
+                <field name="sequence">2</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ar_column_b31_60" model="account.report.column">
+                <field name="name">31-60</field>
+                <field name="expression_label">b31_60</field>
+                <field name="sequence">3</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ar_column_b61_90" model="account.report.column">
+                <field name="name">61-90</field>
+                <field name="expression_label">b61_90</field>
+                <field name="sequence">4</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ar_column_b91_120" model="account.report.column">
+                <field name="name">91-120</field>
+                <field name="expression_label">b91_120</field>
+                <field name="sequence">5</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ar_column_older" model="account.report.column">
+                <field name="name">Older</field>
+                <field name="expression_label">b_older</field>
+                <field name="sequence">6</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ar_column_total" model="account.report.column">
+                <field name="name">Total</field>
+                <field name="expression_label">total</field>
+                <field name="sequence">7</field>
+                <field name="figure_type">monetary</field>
+            </record>
+        </field>
+        <field name="line_ids">
+            <record id="hpr_ar_root" model="account.report.line">
+                <field name="name">Partners</field>
+                <field name="code">total_hpr_ar_root</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">10</field>
+                <field name="groupby">partner_id</field>
+                <field name="foldable" eval="True"/>
+                <field name="expression_ids">
+                    <record id="hpr_ar_not_due" model="account.report.expression">
+                        <field name="label">not_due</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'asset_receivable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="0"/>
+                        <field name="hpr_aging_to_days" eval="0"/>
+                    </record>
+                    <record id="hpr_ar_b1_30" model="account.report.expression">
+                        <field name="label">b1_30</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'asset_receivable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="1"/>
+                        <field name="hpr_aging_to_days" eval="30"/>
+                    </record>
+                    <record id="hpr_ar_b31_60" model="account.report.expression">
+                        <field name="label">b31_60</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'asset_receivable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="31"/>
+                        <field name="hpr_aging_to_days" eval="60"/>
+                    </record>
+                    <record id="hpr_ar_b61_90" model="account.report.expression">
+                        <field name="label">b61_90</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'asset_receivable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="61"/>
+                        <field name="hpr_aging_to_days" eval="90"/>
+                    </record>
+                    <record id="hpr_ar_b91_120" model="account.report.expression">
+                        <field name="label">b91_120</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'asset_receivable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="91"/>
+                        <field name="hpr_aging_to_days" eval="120"/>
+                    </record>
+                    <record id="hpr_ar_older" model="account.report.expression">
+                        <field name="label">b_older</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'asset_receivable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="121"/>
+                        <field name="hpr_aging_to_days" eval="999999"/>
+                    </record>
+                    <record id="hpr_ar_total" model="account.report.expression">
+                        <field name="label">total</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'asset_receivable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">from_beginning</field>
+                    </record>
+                </field>
+            </record>
+        </field>
+    </record>
+
+    <record id="hpr_aged_payable" model="account.report">
+        <field name="name">Aged Payable</field>
+        <field name="sequence">155</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_show_draft" eval="True"/>
+        <field name="column_ids">
+            <record id="hpr_ap_column_not_due" model="account.report.column">
+                <field name="name">Not Due Yet</field>
+                <field name="expression_label">not_due</field>
+                <field name="sequence">1</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ap_column_b1_30" model="account.report.column">
+                <field name="name">1-30</field>
+                <field name="expression_label">b1_30</field>
+                <field name="sequence">2</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ap_column_b31_60" model="account.report.column">
+                <field name="name">31-60</field>
+                <field name="expression_label">b31_60</field>
+                <field name="sequence">3</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ap_column_b61_90" model="account.report.column">
+                <field name="name">61-90</field>
+                <field name="expression_label">b61_90</field>
+                <field name="sequence">4</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ap_column_b91_120" model="account.report.column">
+                <field name="name">91-120</field>
+                <field name="expression_label">b91_120</field>
+                <field name="sequence">5</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ap_column_older" model="account.report.column">
+                <field name="name">Older</field>
+                <field name="expression_label">b_older</field>
+                <field name="sequence">6</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_ap_column_total" model="account.report.column">
+                <field name="name">Total</field>
+                <field name="expression_label">total</field>
+                <field name="sequence">7</field>
+                <field name="figure_type">monetary</field>
+            </record>
+        </field>
+        <field name="line_ids">
+            <record id="hpr_ap_root" model="account.report.line">
+                <field name="name">Partners</field>
+                <field name="code">total_hpr_ap_root</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">10</field>
+                <field name="groupby">partner_id</field>
+                <field name="foldable" eval="True"/>
+                <field name="expression_ids">
+                    <record id="hpr_ap_not_due" model="account.report.expression">
+                        <field name="label">not_due</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'liability_payable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="0"/>
+                        <field name="hpr_aging_to_days" eval="0"/>
+                    </record>
+                    <record id="hpr_ap_b1_30" model="account.report.expression">
+                        <field name="label">b1_30</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'liability_payable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="1"/>
+                        <field name="hpr_aging_to_days" eval="30"/>
+                    </record>
+                    <record id="hpr_ap_b31_60" model="account.report.expression">
+                        <field name="label">b31_60</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'liability_payable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="31"/>
+                        <field name="hpr_aging_to_days" eval="60"/>
+                    </record>
+                    <record id="hpr_ap_b61_90" model="account.report.expression">
+                        <field name="label">b61_90</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'liability_payable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="61"/>
+                        <field name="hpr_aging_to_days" eval="90"/>
+                    </record>
+                    <record id="hpr_ap_b91_120" model="account.report.expression">
+                        <field name="label">b91_120</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'liability_payable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="91"/>
+                        <field name="hpr_aging_to_days" eval="120"/>
+                    </record>
+                    <record id="hpr_ap_older" model="account.report.expression">
+                        <field name="label">b_older</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'liability_payable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">aging</field>
+                        <field name="hpr_aging_from_days" eval="121"/>
+                        <field name="hpr_aging_to_days" eval="999999"/>
+                    </record>
+                    <record id="hpr_ap_total" model="account.report.expression">
+                        <field name="label">total</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'liability_payable'), ('reconciled', '=', False)]</field>
+                        <field name="subformula">residual</field>
+                        <field name="date_scope">from_beginning</field>
+                    </record>
+                </field>
+            </record>
+        </field>
+    </record>
+</odoo>

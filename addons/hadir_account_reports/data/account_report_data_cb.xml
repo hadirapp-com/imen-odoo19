@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- CASH BOOK                                                      -->
+    <!-- ============================================================= -->
+    <record id="hpr_cash_book" model="account.report">
+        <field name="name">Cash Book</field>
+        <field name="sequence">170</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="load_more_limit">20</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_show_draft" eval="True"/>
+        <field name="filter_period_comparison" eval="True"/>
+        <field name="filter_journals" eval="True"/>
+        <field name="column_ids">
+            <record id="hpr_cb_column_debit" model="account.report.column">
+                <field name="name">Debit</field>
+                <field name="expression_label">debit</field>
+                <field name="sequence">1</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_cb_column_credit" model="account.report.column">
+                <field name="name">Credit</field>
+                <field name="expression_label">credit</field>
+                <field name="sequence">2</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_cb_column_balance" model="account.report.column">
+                <field name="name">Balance</field>
+                <field name="expression_label">balance</field>
+                <field name="sequence">3</field>
+                <field name="figure_type">monetary</field>
+            </record>
+        </field>
+        <field name="line_ids">
+            <record id="hpr_cb_initial" model="account.report.line">
+                <field name="name">Initial Balance</field>
+                <field name="code">total_hpr_cb_initial</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">5</field>
+                <field name="hide_if_zero" eval="True"/>
+                <field name="expression_ids">
+                    <record id="hpr_cb_initial_debit" model="account.report.expression">
+                        <field name="label">debit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'cash')]</field>
+                        <field name="subformula">debit</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                    <record id="hpr_cb_initial_credit" model="account.report.expression">
+                        <field name="label">credit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'cash')]</field>
+                        <field name="subformula">credit</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                    <record id="hpr_cb_initial_balance" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'cash')]</field>
+                        <field name="subformula">balance</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                </field>
+            </record>
+            <record id="hpr_cb_root" model="account.report.line">
+                <field name="name">Cash Accounts</field>
+                <field name="code">total_hpr_cb_root</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">10</field>
+                <field name="groupby">account_id</field>
+                <field name="foldable" eval="True"/>
+                <field name="expression_ids">
+                    <record id="hpr_cb_root_debit" model="account.report.expression">
+                        <field name="label">debit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'cash')]</field>
+                        <field name="subformula">debit</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                    <record id="hpr_cb_root_credit" model="account.report.expression">
+                        <field name="label">credit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'cash')]</field>
+                        <field name="subformula">credit</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                    <record id="hpr_cb_root_balance" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'cash')]</field>
+                        <field name="subformula">balance</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                </field>
+            </record>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- BANK BOOK                                                      -->
+    <!-- ============================================================= -->
+    <record id="hpr_bank_book" model="account.report">
+        <field name="name">Bank Book</field>
+        <field name="sequence">175</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="load_more_limit">20</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_show_draft" eval="True"/>
+        <field name="filter_period_comparison" eval="True"/>
+        <field name="filter_journals" eval="True"/>
+        <field name="column_ids">
+            <record id="hpr_bb_column_debit" model="account.report.column">
+                <field name="name">Debit</field>
+                <field name="expression_label">debit</field>
+                <field name="sequence">1</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_bb_column_credit" model="account.report.column">
+                <field name="name">Credit</field>
+                <field name="expression_label">credit</field>
+                <field name="sequence">2</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_bb_column_balance" model="account.report.column">
+                <field name="name">Balance</field>
+                <field name="expression_label">balance</field>
+                <field name="sequence">3</field>
+                <field name="figure_type">monetary</field>
+            </record>
+        </field>
+        <field name="line_ids">
+            <record id="hpr_bb_initial" model="account.report.line">
+                <field name="name">Initial Balance</field>
+                <field name="code">total_hpr_bb_initial</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">5</field>
+                <field name="hide_if_zero" eval="True"/>
+                <field name="expression_ids">
+                    <record id="hpr_bb_initial_debit" model="account.report.expression">
+                        <field name="label">debit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'bank')]</field>
+                        <field name="subformula">debit</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                    <record id="hpr_bb_initial_credit" model="account.report.expression">
+                        <field name="label">credit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'bank')]</field>
+                        <field name="subformula">credit</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                    <record id="hpr_bb_initial_balance" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'bank')]</field>
+                        <field name="subformula">balance</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                </field>
+            </record>
+            <record id="hpr_bb_root" model="account.report.line">
+                <field name="name">Bank Accounts</field>
+                <field name="code">total_hpr_bb_root</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">10</field>
+                <field name="groupby">account_id</field>
+                <field name="foldable" eval="True"/>
+                <field name="expression_ids">
+                    <record id="hpr_bb_root_debit" model="account.report.expression">
+                        <field name="label">debit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'bank')]</field>
+                        <field name="subformula">debit</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                    <record id="hpr_bb_root_credit" model="account.report.expression">
+                        <field name="label">credit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'bank')]</field>
+                        <field name="subformula">credit</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                    <record id="hpr_bb_root_balance" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False), ('journal_id.type', '=', 'bank')]</field>
+                        <field name="subformula">balance</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                </field>
+            </record>
+        </field>
+    </record>
+</odoo>

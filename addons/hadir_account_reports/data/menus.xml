@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Client actions + menus are created by hooks.setup_actions_and_menus
+         (called here so `-u hadir_account_reports` also refreshes them). -->
+    <function model="account.report" name="hpr_setup_actions_and_menus"/>
+</odoo>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_had_dashboard" model="ir.actions.client">
+        <field name="name">Accounting Dashboard</field>
+        <field name="tag">hadir_accounting_dashboard</field>
+    </record>
+
+    <record id="action_had_process_followups" model="ir.actions.server">
+        <field name="name">Customer Follow-ups</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="state">code</field>
+        <field name="code">action = env['res.partner'].action_hadir_process_followups()</field>
+    </record>
+
+    <menuitem id="menu_had_dashboard"
+              name="Accounting Dashboard"
+              parent="account.menu_finance"
+              action="action_had_dashboard"
+              sequence="0"
+              groups="account.group_account_readonly"/>
+
+    <menuitem id="menu_had_assets"
+              name="Assets &amp; Depreciation"
+              parent="account.menu_finance_entries"
+              action="action_had_asset"
+              sequence="25"
+              groups="account.group_account_readonly"/>
+
+    <menuitem id="menu_had_deferred"
+              name="Deferred Entries"
+              parent="account.menu_finance_entries"
+              action="action_had_deferred"
+              sequence="26"
+              groups="account.group_account_readonly"/>
+
+    <menuitem id="menu_had_budgets"
+              name="Budgets"
+              parent="account.menu_finance_reports"
+              action="action_had_budget"
+              sequence="20"
+              groups="account.group_account_readonly"/>
+
+    <menuitem id="menu_had_followups"
+              name="Follow-ups"
+              parent="account.menu_finance_receivables"
+              action="action_had_process_followups"
+              sequence="20"
+              groups="account.group_account_readonly"/>
+
+    <menuitem id="menu_had_followup_levels"
+              name="Follow-up Levels"
+              parent="account.menu_finance_configuration"
+              action="action_had_followup_levels"
+              sequence="25"
+              groups="account.group_account_manager"/>
+
+    <!-- Native Community action without an EE menu; surface it like account_accountant does -->
+    <menuitem id="menu_had_reconcile_models"
+              name="Reconciliation Models"
+              parent="account.account_account_menu"
+              action="account.action_account_reconcile_model"
+              sequence="10"
+              groups="account.group_account_manager"/>
+</odoo>

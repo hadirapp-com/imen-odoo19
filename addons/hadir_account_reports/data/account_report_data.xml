@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- BALANCE SHEET                                                  -->
+    <!-- ============================================================= -->
+    <record id="hpr_balance_sheet" model="account.report">
+        <field name="name">Balance Sheet</field>
+        <field name="sequence">100</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_show_draft" eval="True"/>
+        <field name="filter_period_comparison" eval="True"/>
+        <field name="filter_journals" eval="True"/>
+        <field name="filter_hadir_consolidation" eval="True"/>
+        <field name="column_ids">
+            <record id="hpr_balance_sheet_column_balance" model="account.report.column">
+                <field name="name">Balance</field>
+                <field name="expression_label">balance</field>
+                <field name="sequence">1</field>
+                <field name="figure_type">monetary</field>
+            </record>
+        </field>
+        <field name="line_ids">
+            <!-- ==================== ASSETS ==================== -->
+            <record id="hpr_bs_assets" model="account.report.line">
+                <field name="name">ASSETS</field>
+                <field name="code">hpr_bs_assets</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">10</field>
+                <field name="children_ids">
+                    <record id="hpr_bs_current_assets" model="account.report.line">
+                        <field name="name">Current Assets</field>
+                        <field name="code">hpr_bs_current_assets</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">10</field>
+                        <field name="foldable" eval="True"/>
+                        <field name="expression_ids">
+                            <record id="hpr_bs_current_assets_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">sum_children</field>
+                            </record>
+                        </field>
+                        <field name="children_ids">
+                            <record id="hpr_bs_bank" model="account.report.line">
+                                <field name="name">Bank and Cash Accounts</field>
+                                <field name="code">hpr_bs_bank</field>
+                                <field name="hierarchy_level">2</field>
+                                <field name="sequence">10</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="hpr_bs_bank_dom" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula">[('account_type', '=', 'asset_cash'), ('account_id.include_initial_balance', '=', True)]</field>
+                                        <field name="subformula">balance</field>
+                                        <field name="date_scope">from_beginning</field>
+                                    </record>
+                                </field>
+                            </record>
+                            <record id="hpr_bs_receivable" model="account.report.line">
+                                <field name="name">Receivables</field>
+                                <field name="code">hpr_bs_receivable</field>
+                                <field name="hierarchy_level">2</field>
+                                <field name="sequence">20</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="hpr_bs_receivable_dom" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula">[('account_type', '=', 'asset_receivable'), ('account_id.include_initial_balance', '=', True)]</field>
+                                        <field name="subformula">balance</field>
+                                        <field name="date_scope">from_beginning</field>
+                                    </record>
+                                </field>
+                            </record>
+                            <record id="hpr_bs_current" model="account.report.line">
+                                <field name="name">Other Current Assets</field>
+                                <field name="code">hpr_bs_current</field>
+                                <field name="hierarchy_level">2</field>
+                                <field name="sequence">30</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="hpr_bs_current_dom" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula">[('account_type', '=', 'asset_current'), ('account_id.include_initial_balance', '=', True)]</field>
+                                        <field name="subformula">balance</field>
+                                        <field name="date_scope">from_beginning</field>
+                                    </record>
+                                </field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_bs_noncurrent_assets" model="account.report.line">
+                        <field name="name">Non-current Assets</field>
+                        <field name="code">hpr_bs_noncurrent_assets</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">20</field>
+                        <field name="foldable" eval="True"/>
+                        <field name="expression_ids">
+                            <record id="hpr_bs_noncurrent_assets_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">sum_children</field>
+                            </record>
+                        </field>
+                        <field name="children_ids">
+                            <record id="hpr_bs_fixed" model="account.report.line">
+                                <field name="name">Fixed Assets</field>
+                                <field name="code">hpr_bs_fixed</field>
+                                <field name="hierarchy_level">2</field>
+                                <field name="sequence">10</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="hpr_bs_fixed_dom" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula">[('account_type', '=', 'asset_fixed'), ('account_id.include_initial_balance', '=', True)]</field>
+                                        <field name="subformula">balance</field>
+                                        <field name="date_scope">from_beginning</field>
+                                    </record>
+                                </field>
+                            </record>
+                            <record id="hpr_bs_prepayments" model="account.report.line">
+                                <field name="name">Prepayments</field>
+                                <field name="code">hpr_bs_prepayments</field>
+                                <field name="hierarchy_level">2</field>
+                                <field name="sequence">20</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="hpr_bs_prepayments_dom" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula">[('account_type', '=', 'asset_prepayments'), ('account_id.include_initial_balance', '=', True)]</field>
+                                        <field name="subformula">balance</field>
+                                        <field name="date_scope">from_beginning</field>
+                                    </record>
+                                </field>
+                            </record>
+                            <record id="hpr_bs_noncurrent" model="account.report.line">
+                                <field name="name">Other Non-current Assets</field>
+                                <field name="code">hpr_bs_noncurrent</field>
+                                <field name="hierarchy_level">2</field>
+                                <field name="sequence">30</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="hpr_bs_noncurrent_dom" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula">[('account_type', '=', 'asset_non_current'), ('account_id.include_initial_balance', '=', True)]</field>
+                                        <field name="subformula">balance</field>
+                                        <field name="date_scope">from_beginning</field>
+                                    </record>
+                                </field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_bs_total_assets" model="account.report.line">
+                        <field name="name">Total Assets</field>
+                        <field name="code">total_hpr_bs_assets</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">90</field>
+                        <field name="expression_ids">
+                            <record id="hpr_bs_total_assets_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">hpr_bs_current_assets.balance + hpr_bs_noncurrent_assets.balance</field>
+                            </record>
+                        </field>
+                    </record>
+                </field>
+            </record>
+            <!-- ==================== LIABILITIES ==================== -->
+            <record id="hpr_bs_liabilities" model="account.report.line">
+                <field name="name">LIABILITIES</field>
+                <field name="code">hpr_bs_liabilities</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">20</field>
+                <field name="children_ids">
+                    <record id="hpr_bs_current_liabilities" model="account.report.line">
+                        <field name="name">Current Liabilities</field>
+                        <field name="code">hpr_bs_current_liabilities</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">10</field>
+                        <field name="foldable" eval="True"/>
+                        <field name="expression_ids">
+                            <record id="hpr_bs_current_liabilities_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">sum_children</field>
+                            </record>
+                        </field>
+                        <field name="children_ids">
+                            <record id="hpr_bs_payable" model="account.report.line">
+                                <field name="name">Payables</field>
+                                <field name="code">hpr_bs_payable</field>
+                                <field name="hierarchy_level">2</field>
+                                <field name="sequence">10</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="hpr_bs_payable_dom" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula">[('account_type', 'in', ('liability_payable', 'liability_credit_card')), ('account_id.include_initial_balance', '=', True)]</field>
+                                        <field name="subformula">balance</field>
+                                        <field name="date_scope">from_beginning</field>
+                                    </record>
+                                </field>
+                            </record>
+                            <record id="hpr_bs_liability_current" model="account.report.line">
+                                <field name="name">Other Current Liabilities</field>
+                                <field name="code">hpr_bs_liability_current</field>
+                                <field name="hierarchy_level">2</field>
+                                <field name="sequence">20</field>
+                                <field name="foldable" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="hpr_bs_liability_current_dom" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula">[('account_type', '=', 'liability_current'), ('account_id.include_initial_balance', '=', True)]</field>
+                                        <field name="subformula">balance</field>
+                                        <field name="date_scope">from_beginning</field>
+                                    </record>
+                                </field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_bs_noncurrent_liabilities" model="account.report.line">
+                        <field name="name">Non-current Liabilities</field>
+                        <field name="code">hpr_bs_noncurrent_liabilities</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">20</field>
+                        <field name="expression_ids">
+                            <record id="hpr_bs_noncurrent_liabilities_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'liability_non_current'), ('account_id.include_initial_balance', '=', True)]</field>
+                                <field name="subformula">balance</field>
+                                <field name="date_scope">from_beginning</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_bs_total_liabilities" model="account.report.line">
+                        <field name="name">Total Liabilities</field>
+                        <field name="code">total_hpr_bs_liabilities</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">90</field>
+                        <field name="expression_ids">
+                            <record id="hpr_bs_total_liabilities_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">hpr_bs_current_liabilities.balance + hpr_bs_noncurrent_liabilities.balance</field>
+                            </record>
+                        </field>
+                    </record>
+                </field>
+            </record>
+            <!-- ==================== EQUITY ==================== -->
+            <record id="hpr_bs_equity" model="account.report.line">
+                <field name="name">EQUITY</field>
+                <field name="code">hpr_bs_equity</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">30</field>
+                <field name="children_ids">
+                    <record id="hpr_bs_equity_accounts" model="account.report.line">
+                        <field name="name">Equity Accounts</field>
+                        <field name="code">hpr_bs_equity_accounts</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">10</field>
+                        <field name="foldable" eval="True"/>
+                        <field name="expression_ids">
+                            <record id="hpr_bs_equity_accounts_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">sum_children</field>
+                            </record>
+                        </field>
+                        <field name="children_ids">
+                            <record id="hpr_bs_retained" model="account.report.line">
+                                <field name="name">Retained Earnings</field>
+                                <field name="code">hpr_bs_retained</field>
+                                <field name="hierarchy_level">2</field>
+                                <field name="sequence">10</field>
+                                <field name="expression_ids">
+                                    <record id="hpr_bs_retained_dom" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula">[('account_type', '=', 'equity'), ('account_id.include_initial_balance', '=', True)]</field>
+                                        <field name="subformula">balance</field>
+                                        <field name="date_scope">from_beginning</field>
+                                    </record>
+                                </field>
+                            </record>
+                            <record id="hpr_bs_unaffected" model="account.report.line">
+                                <field name="name">Current Year Earnings (allocated)</field>
+                                <field name="code">hpr_bs_unaffected</field>
+                                <field name="hierarchy_level">2</field>
+                                <field name="sequence">20</field>
+                                <field name="hide_if_zero" eval="True"/>
+                                <field name="expression_ids">
+                                    <record id="hpr_bs_unaffected_dom" model="account.report.expression">
+                                        <field name="label">balance</field>
+                                        <field name="engine">domain</field>
+                                        <field name="formula">[('account_type', '=', 'equity_unaffected')]</field>
+                                        <field name="subformula">balance</field>
+                                        <field name="date_scope">from_beginning</field>
+                                    </record>
+                                </field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_bs_current_earnings" model="account.report.line">
+                        <field name="name">Current Earnings (unallocated)</field>
+                        <field name="code">hpr_bs_current_earnings</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">20</field>
+                        <field name="expression_ids">
+                            <record id="hpr_bs_current_earnings_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', 'in', ('income', 'income_other', 'expense', 'expense_other', 'expense_depreciation', 'expense_direct_cost'))]</field>
+                                <field name="subformula">balance</field>
+                                <field name="date_scope">from_fiscalyear</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_bs_total_equity" model="account.report.line">
+                        <field name="name">Total Equity</field>
+                        <field name="code">total_hpr_bs_equity</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">90</field>
+                        <field name="expression_ids">
+                            <record id="hpr_bs_total_equity_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">hpr_bs_equity_accounts.balance + hpr_bs_current_earnings.balance</field>
+                            </record>
+                        </field>
+                    </record>
+                </field>
+            </record>
+            <!-- ==================== GRAND TOTAL ==================== -->
+            <record id="hpr_bs_total_le" model="account.report.line">
+                <field name="name">TOTAL LIABILITIES AND EQUITY</field>
+                <field name="code">total_hpr_bs_le</field>
+                <field name="hierarchy_level">1</field>
+                <field name="sequence">100</field>
+                <field name="expression_ids">
+                    <record id="hpr_bs_total_le_agg" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">aggregation</field>
+                        <field name="formula">total_hpr_bs_liabilities.balance + total_hpr_bs_equity.balance</field>
+                    </record>
+                </field>
+            </record>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- PROFIT AND LOSS                                                -->
+    <!-- ============================================================= -->
+    <record id="hpr_profit_loss" model="account.report">
+        <field name="name">Profit and Loss</field>
+        <field name="sequence">110</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_show_draft" eval="True"/>
+        <field name="filter_period_comparison" eval="True"/>
+        <field name="filter_journals" eval="True"/>
+        <field name="filter_hadir_consolidation" eval="True"/>
+        <field name="column_ids">
+            <record id="hpr_profit_loss_column_balance" model="account.report.column">
+                <field name="name">Balance</field>
+                <field name="expression_label">balance</field>
+                <field name="sequence">1</field>
+                <field name="figure_type">monetary</field>
+            </record>
+        </field>
+        <field name="line_ids">
+            <record id="hpr_pl_income" model="account.report.line">
+                <field name="name">INCOME</field>
+                <field name="code">hpr_pl_income</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">10</field>
+                <field name="children_ids">
+                    <record id="hpr_pl_income_sales" model="account.report.line">
+                        <field name="name">Sales Income</field>
+                        <field name="code">hpr_pl_income_sales</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">10</field>
+                        <field name="foldable" eval="True"/>
+                        <field name="expression_ids">
+                            <record id="hpr_pl_income_sales_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'income')]</field>
+                                <field name="subformula">balance</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_pl_income_other" model="account.report.line">
+                        <field name="name">Other Income</field>
+                        <field name="code">hpr_pl_income_other</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">20</field>
+                        <field name="expression_ids">
+                            <record id="hpr_pl_income_other_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'income_other')]</field>
+                                <field name="subformula">balance</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_pl_total_income" model="account.report.line">
+                        <field name="name">Total Income</field>
+                        <field name="code">total_hpr_pl_income</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">90</field>
+                        <field name="expression_ids">
+                            <record id="hpr_pl_total_income_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">hpr_pl_income_sales.balance + hpr_pl_income_other.balance</field>
+                            </record>
+                        </field>
+                    </record>
+                </field>
+            </record>
+            <record id="hpr_pl_expenses" model="account.report.line">
+                <field name="name">EXPENSES</field>
+                <field name="code">hpr_pl_expenses</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">20</field>
+                <field name="children_ids">
+                    <record id="hpr_pl_cogs" model="account.report.line">
+                        <field name="name">Cost of Revenue</field>
+                        <field name="code">hpr_pl_cogs</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">10</field>
+                        <field name="expression_ids">
+                            <record id="hpr_pl_cogs_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'expense_direct_cost')]</field>
+                                <field name="subformula">balance</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_pl_expenses_main" model="account.report.line">
+                        <field name="name">Expenses</field>
+                        <field name="code">hpr_pl_expenses_main</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">20</field>
+                        <field name="expression_ids">
+                            <record id="hpr_pl_expenses_main_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'expense')]</field>
+                                <field name="subformula">balance</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_pl_depreciation" model="account.report.line">
+                        <field name="name">Depreciation</field>
+                        <field name="code">hpr_pl_depreciation</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">30</field>
+                        <field name="hide_if_zero" eval="True"/>
+                        <field name="expression_ids">
+                            <record id="hpr_pl_depreciation_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'expense_depreciation')]</field>
+                                <field name="subformula">balance</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_pl_expenses_other" model="account.report.line">
+                        <field name="name">Other Expenses</field>
+                        <field name="code">hpr_pl_expenses_other</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">40</field>
+                        <field name="hide_if_zero" eval="True"/>
+                        <field name="expression_ids">
+                            <record id="hpr_pl_expenses_other_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'expense_other')]</field>
+                                <field name="subformula">balance</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_pl_total_expenses" model="account.report.line">
+                        <field name="name">Total Expenses</field>
+                        <field name="code">total_hpr_pl_expenses</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">90</field>
+                        <field name="expression_ids">
+                            <record id="hpr_pl_total_expenses_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">hpr_pl_cogs.balance + hpr_pl_expenses_main.balance + hpr_pl_depreciation.balance + hpr_pl_expenses_other.balance</field>
+                            </record>
+                        </field>
+                    </record>
+                </field>
+            </record>
+            <record id="hpr_pl_net_profit" model="account.report.line">
+                <field name="name">NET PROFIT</field>
+                <field name="code">total_hpr_pl_net</field>
+                <field name="hierarchy_level">1</field>
+                <field name="sequence">100</field>
+                <field name="expression_ids">
+                    <record id="hpr_pl_net_profit_agg" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">aggregation</field>
+                        <field name="formula">total_hpr_pl_income.balance - total_hpr_pl_expenses.balance</field>
+                    </record>
+                </field>
+            </record>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- TRIAL BALANCE                                                  -->
+    <!-- ============================================================= -->
+    <record id="hpr_trial_balance" model="account.report">
+        <field name="name">Trial Balance</field>
+        <field name="sequence">120</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="load_more_limit">20</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_show_draft" eval="True"/>
+        <field name="filter_journals" eval="True"/>
+        <field name="column_ids">
+            <record id="hpr_trial_balance_column_debit" model="account.report.column">
+                <field name="name">Debit</field>
+                <field name="expression_label">debit</field>
+                <field name="sequence">1</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_trial_balance_column_credit" model="account.report.column">
+                <field name="name">Credit</field>
+                <field name="expression_label">credit</field>
+                <field name="sequence">2</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_trial_balance_column_balance" model="account.report.column">
+                <field name="name">Balance</field>
+                <field name="expression_label">balance</field>
+                <field name="sequence">3</field>
+                <field name="figure_type">monetary</field>
+            </record>
+        </field>
+        <field name="line_ids">
+            <record id="hpr_tb_root" model="account.report.line">
+                <field name="name">Journal Entries</field>
+                <field name="code">total_hpr_tb_root</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">10</field>
+                <field name="groupby">account_id</field>
+                <field name="foldable" eval="True"/>
+                <field name="expression_ids">
+                    <record id="hpr_tb_root_debit" model="account.report.expression">
+                        <field name="label">debit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False)]</field>
+                        <field name="subformula">debit</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                    <record id="hpr_tb_root_credit" model="account.report.expression">
+                        <field name="label">credit</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False)]</field>
+                        <field name="subformula">credit</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                    <record id="hpr_tb_root_balance" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_id', '!=', False)]</field>
+                        <field name="subformula">balance</field>
+                        <field name="date_scope">strict_range</field>
+                    </record>
+                </field>
+            </record>
+        </field>
+    </record>
+</odoo>

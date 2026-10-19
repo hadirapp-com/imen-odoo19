@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_hadir_followup" model="ir.ui.view">
+        <field name="name">res.partner.form.hadir.followup</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <field name="hadir_followup_excluded" invisible="1"/>
+                <field name="hadir_currency_id" invisible="1"/>
+                <button class="oe_stat_button" icon="fa-clock-o" type="object"
+                        name="action_hadir_process_followups"
+                        invisible="hadir_overdue_amount &lt;= 0"
+                        groups="account.group_account_readonly"
+                        help="Refresh figures and open the follow-up list">
+                    <field name="hadir_overdue_amount" widget="monetary" string="Overdue"/>
+                </button>
+            </div>
+            <page name="internal_notes" position="after">
+                <page string="Follow-up" name="hadir_followup"
+                      groups="account.group_account_readonly">
+                    <group>
+                        <group>
+                            <field name="hadir_followup_excluded"/>
+                            <field name="hadir_currency_id" invisible="1"/>
+                            <field name="hadir_followup_level_id"/>
+                            <field name="hadir_last_followup_level_id"/>
+                            <field name="hadir_last_followup_date"/>
+                        </group>
+                        <group>
+                            <field name="hadir_total_due"/>
+                            <field name="hadir_overdue_amount"/>
+                            <field name="hadir_max_overdue_days"/>
+                        </group>
+                    </group>
+                    <button name="action_hadir_send_followup" type="object"
+                            string="Send Follow-up Mail" class="btn-primary"
+                            invisible="hadir_overdue_amount &lt;= 0"/>
+                    <button name="action_hadir_process_followups" type="object"
+                            string="Refresh &amp; Open Follow-ups" class="btn-secondary"/>
+                </page>
+            </page>
+        </field>
+    </record>
+</odoo>

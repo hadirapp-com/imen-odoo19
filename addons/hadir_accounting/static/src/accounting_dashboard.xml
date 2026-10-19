@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="hadir_accounting.AccountingDashboard">
+        <div class="o_hadir_dashboard">
+            <div t-if="state.loading" class="o_hadir_dashboard_loading">
+                <i class="fa fa-spinner fa-spin fa-3x" role="img" aria-label="Loading"/>
+            </div>
+            <div t-elif="state.error" class="alert alert-danger">
+                Failed to load dashboard data. <button class="btn btn-link" t-on-click="load">Retry</button>
+            </div>
+            <t t-elif="state.data">
+                <div class="o_hadir_dashboard_header">
+                    <h4>
+                        Accounting Dashboard
+                        <span class="text-muted fs-6 ms-2" t-esc="state.data.company_name"/>
+                    </h4>
+                    <span class="text-muted" t-esc="state.data.today"/>
+                </div>
+
+                <div class="o_hadir_dashboard_grid">
+                    <!-- Bank balances -->
+                    <div class="o_hadir_card o_hadir_card_wide">
+                        <div class="o_hadir_card_title">Bank &amp; Cash</div>
+                        <t t-if="state.data.bank_balances.length">
+                            <div t-foreach="state.data.bank_balances" t-as="journal" t-key="journal.id"
+                                 class="o_hadir_balance_row" t-on-click="() => this.openResModel('account.journal')">
+                                <span class="o_hadir_balance_name">
+                                    <t t-esc="journal.code"/> <t t-esc="journal.name"/>
+                                </span>
+                                <span class="o_hadir_balance_bar">
+                                    <span class="o_hadir_balance_bar_inner" t-att-style="'width: ' + balanceWidth(journal.balance)"/>
+                                </span>
+                                <span class="o_hadir_balance_amount" t-esc="journal.balance_formatted"/>
+                            </div>
+                        </t>
+                        <div t-else="" class="text-muted">No bank or cash journal yet.</div>
+                    </div>
+
+                    <!-- Receivables / payables -->
+                    <div class="o_hadir_card">
+                        <div class="o_hadir_card_title" t-on-click="() => this.openResModel('res.partner')">Receivables</div>
+                        <div class="o_hadir_kpi" t-on-click="() => this.openResModel('res.partner')">
+                            <span class="o_hadir_kpi_value" t-esc="state.data.receivables.total_formatted"/>
+                            <span class="o_hadir_kpi_label">Open</span>
+                        </div>
+                        <div class="o_hadir_kpi o_hadir_kpi_danger" t-on-click="() => this.openResModel('res.partner')">
+                            <span class="o_hadir_kpi_value" t-esc="state.data.receivables.overdue_formatted"/>
+                            <span class="o_hadir_kpi_label">Overdue</span>
+                        </div>
+                    </div>
+
+                    <div class="o_hadir_card">
+                        <div class="o_hadir_card_title" t-on-click="() => this.openResModel('res.partner')">Payables</div>
+                        <div class="o_hadir_kpi" t-on-click="() => this.openResModel('res.partner')">
+                            <span class="o_hadir_kpi_value" t-esc="state.data.payables.total_formatted"/>
+                            <span class="o_hadir_kpi_label">Open</span>
+                        </div>
+                        <div class="o_hadir_kpi o_hadir_kpi_danger" t-on-click="() => this.openResModel('res.partner')">
+                            <span class="o_hadir_kpi_value" t-esc="state.data.payables.overdue_formatted"/>
+                            <span class="o_hadir_kpi_label">Overdue</span>
+                        </div>
+                    </div>
+
+                    <!-- Draft documents -->
+                    <div class="o_hadir_card">
+                        <div class="o_hadir_card_title">Draft Documents</div>
+                        <div class="o_hadir_kpi">
+                            <span class="o_hadir_kpi_value" t-esc="state.data.draft_invoices.count"/>
+                            <span class="o_hadir_kpi_label">Draft Invoices (<t t-esc="state.data.draft_invoices.amount_formatted"/>)</span>
+                        </div>
+                        <div class="o_hadir_kpi">
+                            <span class="o_hadir_kpi_value" t-esc="state.data.draft_bills.count"/>
+                            <span class="o_hadir_kpi_label">Draft Bills (<t t-esc="state.data.draft_bills.amount_formatted"/>)</span>
+                        </div>
+                    </div>
+
+                    <!-- This month -->
+                    <div class="o_hadir_card">
+                        <div class="o_hadir_card_title">This Month <span class="text-muted fs-6" t-esc="state.data.month.label"/></div>
+                        <div class="o_hadir_kpi">
+                            <span class="o_hadir_kpi_value text-success" t-esc="state.data.month.revenue_formatted"/>
+                            <span class="o_hadir_kpi_label">Revenue</span>
+                        </div>
+                        <div class="o_hadir_kpi">
+                            <span class="o_hadir_kpi_value text-danger" t-esc="state.data.month.expenses_formatted"/>
+                            <span class="o_hadir_kpi_label">Expenses</span>
+                        </div>
+                        <div class="o_hadir_kpi">
+                            <span class="o_hadir_kpi_value" t-esc="state.data.month.profit_formatted"/>
+                            <span class="o_hadir_kpi_label">Profit</span>
+                        </div>
+                    </div>
+
+                    <!-- Assets -->
+                    <div class="o_hadir_card" t-on-click="() => this.openResModel('account.asset')">
+                        <div class="o_hadir_card_title">Assets</div>
+                        <div class="o_hadir_kpi">
+                            <span class="o_hadir_kpi_value" t-esc="state.data.assets.fixed.book_value_formatted or '0.00'"/>
+                            <span class="o_hadir_kpi_label">Book Value (<t t-esc="state.data.assets.fixed.count or 0"/> assets)</span>
+                        </div>
+                        <div class="o_hadir_kpi">
+                            <span class="o_hadir_kpi_value" t-esc="state.data.assets.deferred_revenue.book_value_formatted or '0.00'"/>
+                            <span class="o_hadir_kpi_label">Deferred Revenue (<t t-esc="state.data.assets.deferred_revenue.count or 0"/>)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick links -->
+                <div class="o_hadir_links">
+                    <t t-foreach="state.data.links" t-as="link" t-key="link.action_id">
+                        <button class="btn o_hadir_link_btn" t-on-click="() => this.openLink(link)">
+                            <t t-esc="link.name"/>
+                        </button>
+                    </t>
+                </div>
+            </t>
+        </div>
+    </t>
+
+</templates>

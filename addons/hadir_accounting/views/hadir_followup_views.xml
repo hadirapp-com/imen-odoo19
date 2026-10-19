@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_had_followup_level_form" model="ir.ui.view">
+        <field name="name">hadir.followup.level.form</field>
+        <field name="model">hadir.followup.level</field>
+        <field name="arch" type="xml">
+            <form string="Follow-up Level">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. First Reminder"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="delay_days"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="email_template_id"/>
+                            <field name="auto_send"/>
+                            <field name="create_activity"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="Internal note / activity note..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_had_followup_level_list" model="ir.ui.view">
+        <field name="name">hadir.followup.level.list</field>
+        <field name="model">hadir.followup.level</field>
+        <field name="arch" type="xml">
+            <list string="Follow-up Levels">
+                <field name="name"/>
+                <field name="delay_days"/>
+                <field name="email_template_id"/>
+                <field name="auto_send" widget="boolean_toggle"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_had_followup_levels" model="ir.actions.act_window">
+        <field name="name">Follow-up Levels</field>
+        <field name="res_model">hadir.followup.level</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Define follow-up levels</p>
+            <p>Levels apply based on the customer's maximum overdue days; the highest matching level wins.</p>
+        </field>
+    </record>
+
+    <record id="view_partner_hadir_followup_tree" model="ir.ui.view">
+        <field name="name">res.partner.hadir.followup.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list string="Customer Follow-ups" create="false" edit="false" delete="false"
+                  decoration-danger="hadir_max_overdue_days &gt; 60">
+                <field name="hadir_currency_id" column_invisible="1"/>
+                <field name="display_name" string="Customer"/>
+                <field name="hadir_total_due"/>
+                <field name="hadir_overdue_amount"/>
+                <field name="hadir_max_overdue_days"/>
+                <field name="hadir_followup_level_id"/>
+                <field name="hadir_last_followup_level_id" optional="show"/>
+                <field name="hadir_last_followup_date" optional="show"/>
+                <field name="hadir_followup_excluded" widget="boolean_toggle" optional="show"/>
+                <button name="action_hadir_send_followup" type="object" string="Send Mail"
+                        icon="fa-envelope" class="btn btn-secondary"
+                        invisible="hadir_overdue_amount &lt;= 0"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_partner_hadir_followup_search" model="ir.ui.view">
+        <field name="name">res.partner.hadir.followup.search</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <search string="Follow-ups">
+                <field name="display_name"/>
+                <field name="hadir_followup_level_id"/>
+                <filter name="hadir_followup_filter" string="With Overdue"
+                        domain="[('hadir_overdue_amount', '&gt;', 0)]"/>
+                <group>
+                    <filter string="Follow-up Level" name="group_level"
+                            context="{'group_by': 'hadir_followup_level_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+</odoo>

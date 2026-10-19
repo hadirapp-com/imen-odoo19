@@ -12,7 +12,7 @@
                     <field name="flight_type"/>
                     <field name="airline"/>
                     <field name="flight_number"/>
-                    <field name="departure_airport"/>
+                    <field name="pilgrim_ids" widget="many2many_tags" optional="show"/>
                     <field name="departure_datetime"/>
                     <field name="arrival_airport" optional="show"/>
                     <field name="arrival_datetime" optional="show"/>
@@ -35,6 +35,10 @@
                                 <field name="flight_type"/>
                                 <field name="airline"/>
                                 <field name="flight_number"/>
+                                <field name="pilgrim_ids" widget="many2many_tags"
+                                       domain="[('booking_id', '=', booking_id)]"
+                                       options="{'no_create': True}"
+                                       invisible="not booking_id"/>
                                 <field name="company_id" groups="base.group_multi_company"/>
                             </group>
                             <group name="outbound">

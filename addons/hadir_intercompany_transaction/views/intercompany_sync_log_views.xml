@@ -37,7 +37,7 @@
                     <field name="error_message"/>
                     <filter name="failed" string="Failed" domain="[('result', '=', 'failed')]"/>
                     <filter name="success" string="Success" domain="[('result', '=', 'success')]"/>
-                    <group expand="0" string="Group By">
+                    <group>
                         <filter name="group_result" string="Result" context="{'group_by': 'result'}"/>
                         <filter name="group_operation" string="Operation" context="{'group_by': 'operation'}"/>
                         <filter name="group_source" string="Buyer Company" context="{'group_by': 'source_company_id'}"/>

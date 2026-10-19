@@ -16,6 +16,12 @@ class UmrahFlight(models.Model):
     booking_id = fields.Many2one(
         'umrah.booking', string='Booking', required=True, index=True, ondelete='cascade')
     sequence = fields.Integer(default=10)
+    pilgrim_ids = fields.Many2many(
+        'umrah.pilgrim', 'umrah_flight_pilgrim_rel', 'flight_id', 'pilgrim_id',
+        string='Pilgrims',
+        help='Passengers on this flight. New flights default to all pilgrims '
+             'of the booking.')
+    pilgrim_count = fields.Integer(compute='_compute_pilgrim_count')
     flight_type = fields.Selection(
         selection=FLIGHT_TYPES, string='Type', required=True, default='outbound')
     airline = fields.Char(required=True)
@@ -31,6 +37,37 @@ class UmrahFlight(models.Model):
         related='booking_id.company_id', store=True, index=True, readonly=True)
 
     display_name = fields.Char(compute='_compute_display_name')
+
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        booking_id = res.get('booking_id')
+        if isinstance(booking_id, int) and 'pilgrim_ids' in fields_list \
+                and not res.get('pilgrim_ids'):
+            res['pilgrim_ids'] = [(6, 0, self.env['umrah.booking']
+                                   .browse(booking_id).pilgrim_ids.ids)]
+        return res
+
+    @api.onchange('booking_id')
+    def _onchange_booking_id(self):
+        if self.booking_id and not self.pilgrim_ids:
+            self.pilgrim_ids = self.booking_id.pilgrim_ids
+
+    @api.depends('pilgrim_ids')
+    def _compute_pilgrim_count(self):
+        for flight in self:
+            flight.pilgrim_count = len(flight.pilgrim_ids)
+
+    @api.constrains('booking_id', 'pilgrim_ids')
+    def _check_pilgrims_belong_to_booking(self):
+        for flight in self:
+            wrong = flight.pilgrim_ids.filtered(
+                lambda p: p.booking_id != flight.booking_id)
+            if wrong:
+                raise ValidationError(_(
+                    'Pilgrim(s) %(names)s do not belong to booking %(booking)s.',
+                    names=', '.join(wrong.mapped('full_name')[:5]),
+                    booking=flight.booking_id.name))
 
     @api.depends('airline', 'flight_number', 'departure_datetime')
     def _compute_display_name(self):

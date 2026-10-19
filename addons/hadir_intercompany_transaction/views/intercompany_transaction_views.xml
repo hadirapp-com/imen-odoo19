@@ -43,7 +43,7 @@
                             domain="[('sync_state', 'in', ('so_confirmed', 'partially_invoiced'))]"/>
                     <separator/>
                     <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
-                    <group expand="0" string="Group By">
+                    <group>
                         <filter name="group_state" string="Sync State" context="{'group_by': 'sync_state'}"/>
                         <filter name="group_source" string="Buyer Company" context="{'group_by': 'source_company_id'}"/>
                         <filter name="group_target" string="Seller Company" context="{'group_by': 'target_company_id'}"/>

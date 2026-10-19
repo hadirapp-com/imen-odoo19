@@ -20,6 +20,14 @@
                            decoration-info="state in ('draft', 'submitted', 'processing')"
                            decoration-success="state == 'approved'"
                            decoration-danger="state in ('rejected', 'expired')"/>
+                    <field name="attachment_count" optional="show" string="Att."/>
+                    <field name="pilgrim_document_count" column_invisible="1"/>
+                    <button name="action_attach_document" type="object"
+                            string="Attach" icon="fa-paperclip" class="btn-link"
+                            invisible="not id"/>
+                    <button name="action_view_pilgrim_documents" type="object"
+                            string="View Doc" icon="fa-folder-open" class="btn-link"
+                            invisible="pilgrim_document_count == 0 or not id"/>
                     <field name="company_id" groups="base.group_multi_company" optional="hide"/>
                 </list>
             </field>

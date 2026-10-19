@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_had_asset_form" model="ir.ui.view">
+        <field name="name">account.asset.form</field>
+        <field name="model">account.asset</field>
+        <field name="arch" type="xml">
+            <form string="Asset / Deferred Entry">
+                <header>
+                    <button name="action_validate" type="object" string="Confirm"
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_set_draft" type="object" string="Set to Draft"
+                            invisible="state != 'running'" confirm="Set the asset back to draft?"/>
+                    <button name="action_dispose" type="object" string="Dispose"
+                            invisible="state != 'running'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,running,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_depreciation_moves" type="object"
+                                class="oe_stat_button" icon="fa-bars"
+                                invisible="depreciation_move_count == 0">
+                            <field name="depreciation_move_count" widget="statinfo" string="Depreciations"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Macbook Pro 16, Sewing Machine..."/></h1>
+                    </div>
+                    <group>
+                        <group name="main">
+                            <field name="code"/>
+                            <field name="asset_type" readonly="state != 'draft'"/>
+                            <field name="is_deferred" readonly="state != 'draft'"/>
+                            <field name="partner_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group name="values">
+                            <field name="original_value" readonly="state != 'draft'"/>
+                            <field name="salvage_value" readonly="state != 'draft'"
+                                   invisible="is_deferred"/>
+                            <field name="acquisition_date" readonly="state != 'draft'"/>
+                            <field name="book_value"/>
+                            <field name="depreciation_value"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Depreciation" name="depreciation">
+                            <group>
+                                <group>
+                                    <field name="depreciation_start_date" readonly="state != 'draft'"/>
+                                    <field name="duration_months" readonly="state != 'draft'"/>
+                                    <field name="method" readonly="state != 'draft'"
+                                           invisible="is_deferred"/>
+                                    <field name="degressive_factor" readonly="state != 'draft'"
+                                           invisible="method != 'degressive' or is_deferred"/>
+                                    <field name="monthly_depreciation"/>
+                                    <field name="next_depreciation_date"/>
+                                </group>
+                                <group>
+                                    <field name="journal_id" readonly="state != 'draft'"
+                                           required="1"/>
+                                    <field name="account_asset_id" readonly="state != 'draft'"/>
+                                    <field name="account_depreciation_id" readonly="state != 'draft'"/>
+                                </group>
+                            </group>
+                            <separator string="Depreciation Schedule"/>
+                            <field name="depreciation_schedule" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_had_asset_list" model="ir.ui.view">
+        <field name="name">account.asset.list</field>
+        <field name="model">account.asset</field>
+        <field name="arch" type="xml">
+            <list string="Assets" decoration-success="state == 'running'" decoration-muted="state == 'closed'">
+                <field name="code" optional="show"/>
+                <field name="name"/>
+                <field name="partner_id" optional="show"/>
+                <field name="asset_type" optional="hide"/>
+                <field name="is_deferred" optional="hide" widget="boolean"/>
+                <field name="acquisition_date" optional="show"/>
+                <field name="original_value" sum="Total"/>
+                <field name="depreciation_value" sum="Total"/>
+                <field name="book_value" sum="Total"/>
+                <field name="next_depreciation_date" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'running'"
+                       decoration-info="state == 'draft'"
+                       decoration-muted="state == 'closed'"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_had_asset_search" model="ir.ui.view">
+        <field name="name">account.asset.search</field>
+        <field name="model">account.asset</field>
+        <field name="arch" type="xml">
+            <search string="Assets">
+                <field name="name" string="Asset"/>
+                <field name="code"/>
+                <field name="partner_id"/>
+                <filter string="Fixed Assets" name="filter_fixed" domain="[('is_deferred', '=', False)]"/>
+                <filter string="Deferred" name="filter_deferred" domain="[('is_deferred', '=', True)]"/>
+                <separator/>
+                <filter string="Draft" name="filter_draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Running" name="filter_running" domain="[('state', '=', 'running')]"/>
+                <filter string="Closed" name="filter_closed" domain="[('state', '=', 'closed')]"/>
+                <separator/>
+                <filter string="Purchase" name="filter_purchase" domain="[('asset_type', '=', 'purchase')]"/>
+                <filter string="Sale" name="filter_sale" domain="[('asset_type', '=', 'sale')]"/>
+                <group>
+                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Asset Type" name="group_asset_type" context="{'group_by': 'asset_type'}"/>
+                    <filter string="Deferred" name="group_deferred" context="{'group_by': 'is_deferred'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_had_asset" model="ir.actions.act_window">
+        <field name="name">Assets &amp; Depreciation</field>
+        <field name="res_model">account.asset</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_deferred', '=', False)]</field>
+        <field name="context">{'default_is_deferred': False, 'search_default_filter_fixed': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first asset</p>
+            <p>Fixed assets and deferred expenses, depreciated monthly with prorata temporis.</p>
+        </field>
+    </record>
+
+    <record id="action_had_deferred" model="ir.actions.act_window">
+        <field name="name">Deferred Entries</field>
+        <field name="res_model">account.asset</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_deferred', '=', True)]</field>
+        <field name="context">{'default_is_deferred': True, 'default_duration_months': 12}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create a deferred revenue or expense</p>
+            <p>Deferred entries are amortized straight-line over their duration.</p>
+        </field>
+    </record>
+
+    <record id="view_had_asset_dispose_form" model="ir.ui.view">
+        <field name="name">hadir.asset.dispose.form</field>
+        <field name="model">hadir.asset.dispose</field>
+        <field name="arch" type="xml">
+            <form string="Dispose Asset">
+                <group>
+                    <group>
+                        <field name="asset_id"/>
+                        <field name="disposal_date"/>
+                        <field name="gain_loss_account_id"/>
+                    </group>
+                    <group>
+                        <field name="book_value"/>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="company_id" invisible="1"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_dispose" type="object" string="Dispose"
+                            class="btn-primary"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

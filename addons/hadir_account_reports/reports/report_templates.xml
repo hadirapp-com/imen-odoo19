@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_hpr" model="ir.actions.report">
+        <field name="name">Financial Report</field>
+        <field name="model">account.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">hadir_account_reports.report_hpr</field>
+        <field name="report_file">hadir_account_reports.report_hpr</field>
+        <field name="print_report_name">'Financial Report'</field>
+        <field name="paperformat_id" ref="paperformat_hpr_landscape"/>
+        <field name="binding_model_id" eval="False"/>
+    </record>
+
+    <template id="report_hpr">
+        <t t-call="web.html_container">
+            <t t-set="company" t-value="docs.env.company"/>
+            <t t-call="hadir_account_reports.report_hpr_document" t-lang="docs.env.user.lang"/>
+        </t>
+    </template>
+
+    <template id="report_hpr_document">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <div class="oe_structure"/>
+                <h2 class="text-center">
+                    <span t-esc="report.get('name')"/>
+                </h2>
+                <h4 class="text-center text-muted">
+                    <t t-if="consolidation_label">
+                        <span t-esc="consolidation_label"/>
+                    </t>
+                    <t t-else="">
+                        <t t-esc="company.name"/>
+                        <t t-if="periods">
+                            — <span t-esc="' | '.join(p['label'] for p in periods)"/>
+                        </t>
+                    </t>
+                </h4>
+                <table class="table table-sm table-borderless" style="width:100%; margin-top:10px;">
+                    <thead>
+                        <tr>
+                            <th style="width:45%;"/>
+                            <t t-foreach="periods" t-as="period">
+                                <th t-att-colspan="period['colspan']" class="text-center"
+                                    style="border-bottom: 1px solid #333;">
+                                    <span t-esc="period['label']"/>
+                                </th>
+                            </t>
+                        </tr>
+                        <tr>
+                            <th style="border-bottom: 1px solid #333;"/>
+                            <t t-foreach="columns" t-as="column">
+                                <th class="text-end" style="border-bottom: 1px double #333; font-size:12px;">
+                                    <span t-esc="column['name']"/>
+                                </th>
+                            </t>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="lines" t-as="line">
+                            <tr t-attf-class="{{ 'fw-bold' if line.get('style') in ('total', 'title') else '' }}"
+                                t-attf-style="{{ 'border-top: 1px solid #333;' if line.get('style') == 'total' else '' }}">
+                                <td>
+                                    <span t-esc="'    ' * line.get('level', 0) + line['name']"
+                                          t-attf-style="white-space: pre; {{ 'font-weight:bold;' if line.get('style') == 'title' else '' }}"/>
+                                </td>
+                                <t t-foreach="line['cells']" t-as="cell">
+                                    <td class="text-end" style="font-size:12px;">
+                                        <span t-esc="cell['formatted']"/>
+                                    </td>
+                                </t>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+                <div class="oe_structure"/>
+            </div>
+        </t>
+    </template>
+</odoo>
