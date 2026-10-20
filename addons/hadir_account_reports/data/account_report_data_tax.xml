@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- TAX REPORT (dynamic): rows are synthesized per installed tax   -->
+    <!-- by AccountReport._hpr_get_tax_table — no static line_ids.      -->
+    <!-- ============================================================= -->
+    <record id="hpr_tax_report" model="account.report">
+        <field name="name">Tax Report</field>
+        <field name="sequence">160</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_show_draft" eval="True"/>
+        <field name="filter_period_comparison" eval="True"/>
+        <field name="hpr_dynamic">taxes</field>
+        <field name="column_ids">
+            <record id="hpr_tax_report_column_base" model="account.report.column">
+                <field name="name">Base (DPP)</field>
+                <field name="expression_label">base</field>
+                <field name="sequence">1</field>
+                <field name="figure_type">monetary</field>
+            </record>
+            <record id="hpr_tax_report_column_tax" model="account.report.column">
+                <field name="name">Tax (Pajak)</field>
+                <field name="expression_label">tax</field>
+                <field name="sequence">2</field>
+                <field name="figure_type">monetary</field>
+            </record>
+        </field>
+    </record>
+</odoo>

@@ -411,6 +411,8 @@ class HadirAssetDispose(models.TransientModel):
                 'company_id': asset.company_id.id,
                 'date': self.disposal_date,
                 'ref': _('Disposal: %s', asset.name),
+                'hadir_asset_id': asset.id,
+                'hadir_asset_disposal': True,
                 'line_ids': [
                     (0, 0, {
                         'name': _('Disposal: %s', asset.name),

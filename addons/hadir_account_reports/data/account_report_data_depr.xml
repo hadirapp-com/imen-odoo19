@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- DEPRECIATION SCHEDULE (dynamic): asset x month matrix          -->
+    <!-- synthesized by AccountReport._hpr_get_depreciation_table.      -->
+    <!-- ============================================================= -->
+    <record id="hpr_depreciation_schedule" model="account.report">
+        <field name="name">Depreciation Schedule</field>
+        <field name="sequence">170</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_period_comparison" eval="False"/>
+        <field name="hpr_dynamic">depreciation</field>
+    </record>
+</odoo>

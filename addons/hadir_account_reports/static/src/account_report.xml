@@ -10,6 +10,7 @@
                     onComparison.bind="this.onComparison"
                     onMonthlyMode.bind="this.onMonthlyMode"
                     onJournals.bind="this.onJournals"
+                    onPartners.bind="this.onPartners"
                     onAllEntries.bind="this.onAllEntries"
                     onUnfoldAll.bind="this.onUnfoldAll"
                     onConsolidation.bind="this.onConsolidation"
@@ -159,6 +160,40 @@
                     </div>
                 </Dropdown>
 
+                <!-- Partners -->
+                <Dropdown t-if="filters.partner" beforeOpen="() => this.searchPartners()">
+                    <t t-set-slot="toggler">
+                        <button class="hpr-pill btn">
+                            <i class="fa fa-users me-2 text-muted"/>
+                            Partners
+                            <t t-if="options.partners.length" t-esc="' (' + options.partners.length + ')'"/>
+                            <i class="fa fa-caret-down ms-2 text-muted"/>
+                        </button>
+                    </t>
+                    <div class="hpr-dropdown-panel hpr-dropdown-panel--scroll">
+                        <input type="text" class="form-control form-control-sm m-2"
+                               placeholder="Search partner..."
+                               t-model="local.partnerSearch"
+                               t-on-input="this.searchPartners"/>
+                        <button t-if="options.partners.length"
+                                class="dropdown-item text-muted small"
+                                t-on-click="() => props.onPartners([])">
+                            <i class="fa fa-times me-2"/>Clear selection
+                        </button>
+                        <div t-if="options.partners.length" class="dropdown-divider"/>
+                        <label t-foreach="local.partners" t-as="partner" t-key="partner.id"
+                               class="dropdown-item d-flex align-items-center gap-2">
+                            <input type="checkbox"
+                                   t-att-checked="options.partners.includes(partner.id)"
+                                   t-on-change="(ev) => this.onPartnerToggle(partner, ev)"/>
+                            <t t-esc="partner.display_name"/>
+                        </label>
+                        <div t-if="!local.partners.length" class="dropdown-item text-muted small">
+                            No partners found
+                        </div>
+                    </div>
+                </Dropdown>
+
                 <!-- Options -->
                 <Dropdown>
                     <t t-set-slot="toggler">
@@ -236,7 +271,7 @@
                 <tr>
                     <th class="hpr-thead-name"/>
                     <t t-foreach="props.info.columns" t-as="column" t-key="column_index">
-                        <th t-attf-class="text-end hpr-thead-col {{ column_index % colsPerPeriod() === 0 ? 'hpr-block-start' : '' }}">
+                        <th t-attf-class="text-end hpr-thead-col {{ isBlockStart(column_index) ? 'hpr-block-start' : '' }}">
                             <t t-esc="column.name"/>
                         </th>
                     </t>
@@ -253,7 +288,7 @@
                         <t t-esc="line.name"/>
                     </td>
                     <t t-foreach="line.cells" t-as="cell" t-key="cell_index">
-                        <td t-attf-class="hpr-cell--amount {{ cell.classes }} {{ cell_index % colsPerPeriod() === 0 ? 'hpr-block-start' : '' }}">
+                        <td t-attf-class="hpr-cell--amount {{ cell.classes }} {{ isBlockStart(cell_index) ? 'hpr-block-start' : '' }}">
                             <t t-esc="cell.plain !== undefined ? cell.plain : cell.formatted"/>
                         </td>
                     </t>

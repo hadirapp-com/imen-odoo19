@@ -1,18 +1,19 @@
 ACTIONS_SPEC = [
     ('action_hpr_balance_sheet', 'hadir_account_reports.hpr_balance_sheet', 'Balance Sheet', 1),
     ('action_hpr_profit_loss', 'hadir_account_reports.hpr_profit_loss', 'Profit and Loss', 2),
-    ('action_hpr_trial_balance', 'hadir_account_reports.hpr_trial_balance', 'Trial Balance', 3),
-    ('action_hpr_general_ledger', 'hadir_account_reports.hpr_general_ledger', 'General Ledger', 4),
-    ('action_hpr_partner_ledger', 'hadir_account_reports.hpr_partner_ledger', 'Partner Ledger', 5),
-    ('action_hpr_aged_receivable', 'hadir_account_reports.hpr_aged_receivable', 'Aged Receivable', 6),
-    ('action_hpr_aged_payable', 'hadir_account_reports.hpr_aged_payable', 'Aged Payable', 7),
-    ('action_hpr_cash_book', 'hadir_account_reports.hpr_cash_book', 'Cash Book', 8),
-    ('action_hpr_bank_book', 'hadir_account_reports.hpr_bank_book', 'Bank Book', 9),
-    ('action_hpr_tax_report', 'account.generic_tax_report', 'Tax Report', 10),
-]
-
-FILTER_FIELDS = [
-    'filter_date_range', 'filter_show_draft', 'filter_unfold_all',
+    ('action_hpr_cash_flow', 'hadir_account_reports.hpr_cash_flow', 'Cash Flow Statement', 3),
+    ('action_hpr_trial_balance', 'hadir_account_reports.hpr_trial_balance', 'Trial Balance', 4),
+    ('action_hpr_general_ledger', 'hadir_account_reports.hpr_general_ledger', 'General Ledger', 5),
+    ('action_hpr_partner_ledger', 'hadir_account_reports.hpr_partner_ledger', 'Partner Ledger', 6),
+    ('action_hpr_aged_receivable', 'hadir_account_reports.hpr_aged_receivable', 'Aged Receivable', 7),
+    ('action_hpr_aged_payable', 'hadir_account_reports.hpr_aged_payable', 'Aged Payable', 8),
+    ('action_hpr_cash_book', 'hadir_account_reports.hpr_cash_book', 'Cash Book', 9),
+    ('action_hpr_bank_book', 'hadir_account_reports.hpr_bank_book', 'Bank Book', 10),
+    ('action_hpr_tax_report', 'hadir_account_reports.hpr_tax_report', 'Tax Report', 11),
+    ('action_hpr_customer_statement', 'hadir_account_reports.hpr_customer_statement',
+     'Customer Statement', 12),
+    ('action_hpr_depreciation_schedule', 'hadir_account_reports.hpr_depreciation_schedule',
+     'Depreciation Schedule', 13),
 ]
 
 
@@ -92,15 +93,11 @@ def setup_actions_and_menus(env):
                 })
                 _ensure_xmlid(env, 'ir.ui.menu', menu_xmlid, menu.id)
 
-    # 3. Activate the option filters on the generic tax report (its own module
-    #    doesn't set them in community); variants inherit from the root report.
-    generic = env.ref('account.generic_tax_report', raise_if_not_found=False)
-    if generic:
-        generic.write({
-            'filter_date_range': True,
-            'filter_show_draft': True,
-            'filter_unfold_all': True,
-        })
-        if generic.variant_report_ids:
-            for field in FILTER_FIELDS:
-                generic.variant_report_ids._compute_report_option_filter(field)
+    # 3. Partner picker visibility on partner-centric reports (re-asserted
+    #    here because core recomputes option flags from action existence).
+    for report_xmlid in ('hpr_partner_ledger', 'hpr_aged_receivable',
+                         'hpr_aged_payable', 'hpr_customer_statement'):
+        report = env.ref(f'hadir_account_reports.{report_xmlid}',
+                         raise_if_not_found=False)
+        if report and not report.filter_partner:
+            report.write({'filter_partner': True})

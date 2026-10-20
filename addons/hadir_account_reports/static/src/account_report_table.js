@@ -11,20 +11,19 @@ export class AccountReportTable extends Component {
 
     get headerGroups() {
         const groups = [];
-        for (const column of this.props.info.columns) {
+        this.props.info.columns.forEach((column, index) => {
             const last = groups[groups.length - 1];
             if (last && last.label === column.period_label) {
                 last.span += 1;
             } else {
-                groups.push({ label: column.period_label, span: 1 });
+                groups.push({ label: column.period_label, span: 1, start: index });
             }
-        }
+        });
         return groups;
     }
 
-    colsPerPeriod() {
-        const groups = this.headerGroups;
-        return groups.length ? Math.ceil(this.props.info.columns.length / groups.length) : 1;
+    isBlockStart(index) {
+        return this.headerGroups.some((group) => group.start === index);
     }
 
     onRowClick(line, ev) {

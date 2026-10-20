@@ -1,5 +1,6 @@
 import ast
 import re
+import types
 from collections import defaultdict
 from datetime import date, timedelta
 
@@ -19,6 +20,15 @@ class AccountReport(models.Model):
         string="Consolidation Filter",
         help="Offer the 'Branch Consolidation' option: compute per-company "
              "columns (head office + branches) plus a consolidated total.")
+    hpr_dynamic = fields.Selection(
+        [('taxes', 'Tax Report'),
+         ('partner_statement', 'Customer Statement'),
+         ('depreciation', 'Depreciation Schedule')],
+        string="Dynamic Table Engine",
+        help="Reports whose table is synthesized in Python instead of walked "
+             "from static line_ids (taxes: one row per installed tax; "
+             "partner_statement: per-partner running balance; depreciation: "
+             "asset x month matrix).")
 
     # -------------------------------------------------------------------------
     # Entry points (OWL client action)
@@ -39,7 +49,7 @@ class AccountReport(models.Model):
             and hq.hadir_branch_ids)
         return {
             'options': options,
-            'report': {'id': report.id, 'name': report.name},
+            'report': {'id': report.id, 'name': report.name, 'dynamic': report.hpr_dynamic or False},
             'currency': hq.currency_id.name,
             'filters': {
                 'comparison': report.filter_period_comparison,
@@ -267,6 +277,12 @@ class AccountReport(models.Model):
         self.ensure_one()
         if options.get('hadir_consolidation'):
             return self._hpr_get_consolidated_table(options)
+        if self.hpr_dynamic == 'taxes':
+            return self._hpr_get_tax_table(options)
+        if self.hpr_dynamic == 'partner_statement':
+            return self._hpr_get_partner_statement_table(options)
+        if self.hpr_dynamic == 'depreciation':
+            return self._hpr_get_depreciation_table(options)
         periods = self._hpr_get_periods(options)
         columns = []
         for p_idx, period in enumerate(periods):
@@ -381,6 +397,405 @@ class AccountReport(models.Model):
             lines.append(row)
         return {
             'periods': [{'label': label} for label in scope_labels],
+            'columns': columns,
+            'lines': lines,
+        }
+
+    def _hpr_get_tax_table(self, options):
+        """Dynamic Tax Report: one row per top-level installed tax (company,
+        active), grouped Output (sale) / Input (purchase). Base = base lines
+        carrying the tax in tax_ids; Tax = repartition lines posting to it
+        (tax_line_id). Group taxes roll their children in. Both columns show
+        positive amounts for normal operations; credit notes net out."""
+        self.ensure_one()
+        periods = self._hpr_get_periods(options)
+        report_cols = self.column_ids.sorted('sequence')
+        columns = []
+        for p_idx, period in enumerate(periods):
+            for col in report_cols:
+                columns.append({
+                    'expression_label': col.expression_label,
+                    'period_index': p_idx,
+                    'period_label': period['label'],
+                    'name': col.name,
+                    'figure_type': col.figure_type or 'monetary',
+                    'blank_if_zero': col.blank_if_zero,
+                })
+        currency = self.env.company.currency_id
+        base_col = report_cols.filtered(lambda c: c.expression_label == 'base')[:1]
+        tax_col = report_cols.filtered(lambda c: c.expression_label == 'tax')[:1]
+        if not base_col or not tax_col:
+            base_col = tax_col = report_cols[:1]
+
+        def title_cells():
+            return [{
+                'value': 0.0, 'formatted': '', 'plain': '',
+                'figure_type': col.figure_type or 'monetary', 'classes': '',
+            } for col in report_cols for _period in periods]
+
+        def tax_values(tax, scope_sign, period):
+            # NOTE: v19 has no per-line cash-basis exigibility flag; l10n_id
+            # taxes are invoice-basis so the date range filter is exact.
+            related = (tax | tax.children_tax_ids)
+            base_domain = [('tax_ids', 'in', related.ids), ('tax_line_id', '=', False)]
+            tax_domain = [('tax_line_id', 'in', related.ids)]
+            base_val = tax_val = 0.0
+            for domain, out in ((base_domain, 'base'), (tax_domain, 'tax')):
+                scoped = self._hpr_apply_date_scope(list(domain), 'strict_range', period)
+                scoped = self._hpr_apply_base_filters(scoped, options)
+                balance = self._hpr_aml_aggregates(scoped)['balance']
+                if out == 'base':
+                    base_val = scope_sign * balance
+                else:
+                    tax_val = scope_sign * balance
+            return base_val, tax_val
+
+        def values_row(row_id, name, level, classes, base_vals, tax_vals):
+            cells = []
+            for p_idx in range(len(periods)):
+                cells.append(self._hpr_format_cell(base_vals[p_idx], base_col, currency))
+                cells.append(self._hpr_format_cell(tax_vals[p_idx], tax_col, currency))
+            return {
+                'id': row_id, 'name': name, 'level': level, 'classes': classes,
+                'foldable': False, 'unfolded': False, 'cells': cells,
+                'action_id': 0, 'has_more': False, 'groupby': False,
+            }
+
+        lines = []
+        grand_base = [0.0] * len(periods)
+        grand_tax = [0.0] * len(periods)
+        for scope, title, scope_sign in (
+                ('sale', _('Output Tax (Sales)'), -1.0),
+                ('purchase', _('Input Tax (Purchases)'), 1.0)):
+            taxes = self.env['account.tax'].search([
+                ('company_id', 'in',
+                 options.get('hadir_scope_company_ids') or self.env.companies.ids),
+                ('type_tax_use', '=', scope),
+            ], order='sequence, name')
+            child_ids = set(taxes.children_tax_ids.ids)
+            taxes = taxes.filtered(lambda t: t.id not in child_ids)
+            section_rows = []
+            sec_base = [0.0] * len(periods)
+            sec_tax = [0.0] * len(periods)
+            for tax in taxes:
+                row_base = [0.0] * len(periods)
+                row_tax = [0.0] * len(periods)
+                for p_idx, period in enumerate(periods):
+                    row_base[p_idx], row_tax[p_idx] = tax_values(tax, scope_sign, period)
+                if not any(row_base) and not any(row_tax):
+                    continue
+                sec_base = [a + b for a, b in zip(sec_base, row_base)]
+                sec_tax = [a + b for a, b in zip(sec_tax, row_tax)]
+                section_rows.append(values_row(
+                    f'tax_{tax.id}', tax.name, 1, [], row_base, row_tax))
+            if not section_rows:
+                continue
+            unfold_key = f'tax_scope_{scope}'
+            unfolded = bool(options.get('unfold_all')
+                            or options['unfolded_lines'].get(unfold_key))
+            lines.append({
+                'id': unfold_key, 'name': title, 'level': 0,
+                'classes': ['hpr-row--title'], 'foldable': True,
+                'unfolded': unfolded, 'cells': title_cells(),
+                'action_id': 0, 'has_more': False, 'groupby': False,
+            })
+            if unfolded:
+                lines.extend(section_rows)
+            lines.append(values_row(
+                f'total_tax_{scope}', _('Subtotal %s', title), 1,
+                ['hpr-row--total'], sec_base, sec_tax))
+            grand_base = [a + b for a, b in zip(grand_base, sec_base)]
+            grand_tax = [a + b for a, b in zip(grand_tax, sec_tax)]
+        if any(grand_base) or any(grand_tax):
+            lines.append(values_row(
+                'total_tax_grand', _('Total'), 0,
+                ['hpr-row--total'], grand_base, grand_tax))
+        return {
+            'periods': [{'label': p['label']} for p in periods],
+            'columns': columns,
+            'lines': lines,
+        }
+
+    def _hpr_get_partner_statement_table(self, options):
+        """Customer Statement: per-partner running-balance ledger over the
+        receivable accounts, for the single selected period (this report has
+        comparison/monthly controls disabled). With no partner selection,
+        every partner with an opening balance or in-range movement shows up."""
+        self.ensure_one()
+        periods = self._hpr_get_periods(options)
+        report_cols = self.column_ids.sorted('sequence')
+        columns = []
+        for p_idx, period in enumerate(periods):
+            for col in report_cols:
+                columns.append({
+                    'expression_label': col.expression_label,
+                    'period_index': p_idx,
+                    'period_label': period['label'],
+                    'name': col.name,
+                    'figure_type': col.figure_type or 'monetary',
+                    'blank_if_zero': col.blank_if_zero,
+                })
+        currency = self.env.company.currency_id
+        col_by_label = {c.expression_label: c for c in report_cols}
+        debit_col = col_by_label.get('debit', report_cols[0])
+        credit_col = col_by_label.get('credit', report_cols[0])
+        balance_col = col_by_label.get('balance', report_cols[0])
+        period = periods[0]
+        date_from, date_to = period['date_from'], period['date_to']
+
+        aml = self.env['account.move.line']
+        base_domain = [('account_type', '=', 'asset_receivable')]
+
+        def scoped(extra):
+            return self._hpr_apply_base_filters(list(base_domain) + extra, options)
+
+        def partner_totals(domain):
+            totals = {}
+            for group in aml._read_group(
+                    domain, ['partner_id'],
+                    ['balance:sum', 'debit:sum', 'credit:sum']):
+                partner = group[0]
+                if isinstance(partner, tuple):
+                    pid, disp = partner
+                else:
+                    pid, disp = partner.id, partner.display_name
+                if pid:
+                    totals[pid] = {'name': disp, 'balance': group[1],
+                                   'debit': group[2], 'credit': group[3]}
+            return totals
+
+        opening_totals = partner_totals(scoped([('date', '<', date_from)]))
+        move_totals = partner_totals(scoped(
+            [('date', '>=', date_from), ('date', '<=', date_to)]))
+        selected = [int(p) for p in (options.get('partners') or [])]
+        if selected:
+            pids = [(p.id, p.display_name)
+                    for p in self.env['res.partner'].browse(selected).exists()]
+        else:
+            merged = {**opening_totals, **move_totals}
+            pids = sorted(merged.items(), key=lambda kv: kv[1]['name'])
+            pids = [(pid, info['name']) for pid, info in pids]
+
+        def cells_from(debit=0.0, credit=0.0, balance=0.0):
+            values = {'debit': debit, 'credit': credit, 'balance': balance}
+            return [self._hpr_format_cell(values.get(col.expression_label, 0.0), col, currency)
+                    for col in report_cols]
+
+        lines = []
+        auto_unfold = len(pids) == 1
+        for pid, pname in pids:
+            opening = opening_totals.get(pid) or {
+                'balance': 0.0, 'debit': 0.0, 'credit': 0.0}
+            movement = move_totals.get(pid) or {
+                'balance': 0.0, 'debit': 0.0, 'credit': 0.0}
+            closing_balance = opening['balance'] + movement['balance']
+            unfold_key = f'stmt_{pid}'
+            unfolded = bool(auto_unfold
+                            or options.get('unfold_all')
+                            or options['unfolded_lines'].get(unfold_key))
+            lines.append({
+                'id': unfold_key, 'name': pname, 'level': 0,
+                'classes': ['hpr-row--title'], 'foldable': True,
+                'unfolded': unfolded,
+                'cells': cells_from(balance=closing_balance),
+                'action_id': 0, 'has_more': False, 'groupby': False,
+            })
+            if not unfolded:
+                continue
+            lines.append({
+                'id': f'{unfold_key}_init', 'name': _('Initial Balance'),
+                'level': 1, 'classes': [], 'foldable': False, 'unfolded': False,
+                'cells': cells_from(balance=opening['balance']),
+                'action_id': 0, 'has_more': False, 'groupby': False,
+            })
+            running = opening['balance']
+            records = aml.search(
+                scoped([('date', '>=', date_from), ('date', '<=', date_to),
+                        ('partner_id', '=', pid)]),
+                order='date, id', limit=200)
+            for line in records:
+                running += line.debit - line.credit
+                date_label = Date.to_string(line.date)
+                label = line.name or line.ref or ''
+                name = f"{date_label}  {line.move_id.name or ''} {label}".strip()
+                lines.append({
+                    'id': f'{unfold_key}_aml_{line.id}', 'name': name,
+                    'level': 1, 'classes': [], 'foldable': False,
+                    'unfolded': False,
+                    'cells': cells_from(debit=line.debit, credit=line.credit,
+                                        balance=running),
+                    'action_id': 0, 'has_more': False, 'groupby': False,
+                })
+            lines.append({
+                'id': f'{unfold_key}_close', 'name': _('Closing Balance'),
+                'level': 1, 'classes': ['hpr-row--total'], 'foldable': False,
+                'unfolded': False,
+                'cells': cells_from(debit=movement['debit'],
+                                    credit=movement['credit'],
+                                    balance=closing_balance),
+                'action_id': 0, 'has_more': False, 'groupby': False,
+            })
+        return {
+            'periods': [{'label': p['label']} for p in periods],
+            'columns': columns,
+            'lines': lines,
+        }
+
+    @api.model
+    def hpr_search_partners(self, search='', limit=20, selected_ids=None, statement=False):
+        """Partner picker feed for the report filters (RPC from JS). Returns
+        the matches plus the currently selected partners, so their checkboxes
+        keep a label."""
+        Partner = self.env['res.partner']
+        domain = [('name', 'ilike', search or '')]
+        if statement:
+            domain += [('customer_rank', '>', 0)]
+        result = []
+        seen = set()
+        candidates = list(Partner.search(domain, limit=limit))
+        candidates += Partner.browse(selected_ids or []).exists()
+        for partner in candidates:
+            if partner.id in seen:
+                continue
+            seen.add(partner.id)
+            result.append({'id': partner.id, 'display_name': partner.display_name})
+        return result
+
+    def _hpr_get_depreciation_table(self, options):
+        """Depreciation Schedule: one row per fixed asset grouped by its
+        asset account. Columns: Original Value | the months of the selected
+        range (posted amounts, else the projected board) | Accumulated
+        (over the asset's full timeline up to date_to) | Book Value."""
+        self.ensure_one()
+        periods = self._hpr_get_periods(options)
+        period = periods[0]
+        date_from, date_to = period['date_from'], period['date_to']
+
+        months = []
+        cursor = date(date_from.year, date_from.month, 1)
+        last = date(date_to.year, date_to.month, 1)
+        while cursor <= last and len(months) < 60:
+            months.append(cursor)
+            cursor = date(cursor.year + (cursor.month == 12),
+                          1 if cursor.month == 12 else cursor.month + 1, 1)
+        to_key = date_to.strftime('%Y-%m')
+
+        col_defs = [{
+            'expression_label': 'original', 'period_index': 0,
+            'period_label': 'Original Value', 'name': 'Original Value',
+            'figure_type': 'monetary', 'blank_if_zero': False,
+        }]
+        for month in months:
+            col_defs.append({
+                'expression_label': 'monthly', 'period_index': 1,
+                'period_label': 'Monthly Depreciation',
+                'name': month.strftime('%b %Y'),
+                'figure_type': 'monetary', 'blank_if_zero': True,
+            })
+        col_defs.append({
+            'expression_label': 'accumulated', 'period_index': 1,
+            'period_label': 'Accumulated', 'name': 'Accumulated',
+            'figure_type': 'monetary', 'blank_if_zero': False,
+        })
+        col_defs.append({
+            'expression_label': 'book', 'period_index': 1,
+            'period_label': 'Book Value', 'name': 'Book Value',
+            'figure_type': 'monetary', 'blank_if_zero': False,
+        })
+        columns = list(col_defs)
+        col_objs = [types.SimpleNamespace(**d) for d in col_defs]
+        original_col, monthly_cols, accumulated_col, book_col = (
+            col_objs[0], col_objs[1:-2], col_objs[-2], col_objs[-1])
+        currency = self.env.company.currency_id
+
+        assets = self.env['account.asset'].search([
+            ('company_id', 'in',
+             options.get('hadir_scope_company_ids') or self.env.companies.ids),
+            ('is_deferred', '=', False),
+            ('state', 'in', ('running', 'closed')),
+        ], order='acquisition_date, id')
+
+        sections = {}
+        for asset in assets:
+            sections.setdefault(asset.account_asset_id.id, {
+                'account': asset.account_asset_id, 'assets': [],
+            })
+            sections[asset.account_asset_id.id]['assets'].append(asset)
+
+        def asset_metrics(asset):
+            posted = {}
+            for move in asset.depreciation_move_ids.filtered(
+                    lambda m: m.state == 'posted' and not m.hadir_asset_disposal):
+                key = move.date.strftime('%Y-%m')
+                posted[key] = posted.get(key, 0.0) + move.amount_total_signed
+            projected = {}
+            if asset.state != 'closed':
+                for entry in asset._compute_depreciation_board():
+                    projected[entry['date'].strftime('%Y-%m')] = entry['amount']
+
+            def month_value(key):
+                if key in posted:
+                    return posted[key]
+                return projected.get(key, 0.0)
+
+            accumulated = sum(
+                month_value(key)
+                for key in set(posted) | set(projected) if key <= to_key)
+            return month_value, asset.original_value, accumulated, (
+                asset.original_value - accumulated)
+
+        def month_lookup(vals):
+            return lambda key: vals[
+                next(i for i, m in enumerate(months)
+                     if m.strftime('%Y-%m') == key)]
+
+        def cells_from(original, fn_monthly, accumulated, book):
+            cells = [self._hpr_format_cell(original, original_col, currency)]
+            cells += [self._hpr_format_cell(fn_monthly(m.strftime('%Y-%m')),
+                                            col, currency)
+                      for m, col in zip(months, monthly_cols)]
+            cells.append(self._hpr_format_cell(accumulated, accumulated_col, currency))
+            cells.append(self._hpr_format_cell(book, book_col, currency))
+            return cells
+
+        lines = []
+        for account_id, section in sorted(
+                sections.items(),
+                key=lambda kv: (kv[1]['account'].code or '', kv[1]['account'].name or '')):
+            unfold_key = f'depr_acc_{account_id}'
+            unfolded = bool(options.get('unfold_all')
+                            or options['unfolded_lines'].get(unfold_key))
+            account = section['account']
+            asset_rows = []
+            sec_monthly = [0.0] * len(months)
+            sec_original = sec_accumulated = sec_book = 0.0
+            for asset in section['assets']:
+                fn_monthly, original, accumulated, book = asset_metrics(asset)
+                sec_monthly = [s + fn_monthly(m.strftime('%Y-%m'))
+                               for s, m in zip(sec_monthly, months)]
+                sec_original += original
+                sec_accumulated += accumulated
+                sec_book += book
+                name = f"[{asset.code}] {asset.name}" if asset.code else asset.name
+                asset_rows.append({
+                    'id': f'depr_asset_{asset.id}', 'name': name, 'level': 1,
+                    'classes': [], 'foldable': False, 'unfolded': False,
+                    'cells': cells_from(original, fn_monthly, accumulated, book),
+                    'action_id': 0, 'has_more': False, 'groupby': False,
+                })
+            lines.append({
+                'id': unfold_key,
+                'name': f"{account.code} {account.name}" if account.code else account.name,
+                'level': 0, 'classes': ['hpr-row--title'], 'foldable': True,
+                'unfolded': unfolded,
+                'cells': cells_from(sec_original, month_lookup(sec_monthly),
+                                    sec_accumulated, sec_book),
+                'action_id': 0, 'has_more': False, 'groupby': False,
+            })
+            if unfolded:
+                lines.extend(asset_rows)
+        return {
+            'periods': [{'label': p['label']} for p in periods],
             'columns': columns,
             'lines': lines,
         }

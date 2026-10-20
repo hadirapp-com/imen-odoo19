@@ -399,7 +399,7 @@
                                 <field name="label">balance</field>
                                 <field name="engine">domain</field>
                                 <field name="formula">[('account_type', '=', 'income')]</field>
-                                <field name="subformula">balance</field>
+                                <field name="subformula">-sum</field>
                                 <field name="date_scope">strict_range</field>
                             </record>
                         </field>
@@ -414,7 +414,7 @@
                                 <field name="label">balance</field>
                                 <field name="engine">domain</field>
                                 <field name="formula">[('account_type', '=', 'income_other')]</field>
-                                <field name="subformula">balance</field>
+                                <field name="subformula">-sum</field>
                                 <field name="date_scope">strict_range</field>
                             </record>
                         </field>

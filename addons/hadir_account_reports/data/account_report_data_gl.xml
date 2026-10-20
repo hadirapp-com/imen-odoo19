@@ -113,6 +113,7 @@
         <field name="filter_show_draft" eval="True"/>
         <field name="filter_period_comparison" eval="True"/>
         <field name="filter_journals" eval="True"/>
+        <field name="filter_partner" eval="True"/>
         <field name="column_ids">
             <record id="hpr_partner_ledger_column_debit" model="account.report.column">
                 <field name="name">Debit</field>
@@ -209,6 +210,7 @@
         <field name="filter_date_range" eval="True"/>
         <field name="filter_unfold_all" eval="True"/>
         <field name="filter_show_draft" eval="True"/>
+        <field name="filter_partner" eval="True"/>
         <field name="column_ids">
             <record id="hpr_ar_column_not_due" model="account.report.column">
                 <field name="name">Not Due Yet</field>
@@ -336,6 +338,7 @@
         <field name="filter_date_range" eval="True"/>
         <field name="filter_unfold_all" eval="True"/>
         <field name="filter_show_draft" eval="True"/>
+        <field name="filter_partner" eval="True"/>
         <field name="column_ids">
             <record id="hpr_ap_column_not_due" model="account.report.column">
                 <field name="name">Not Due Yet</field>

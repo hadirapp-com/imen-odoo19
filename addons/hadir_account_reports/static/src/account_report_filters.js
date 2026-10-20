@@ -2,6 +2,7 @@
 import { Component, useState } from "@odoo/owl";
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
+import { useService } from "@web/core/utils/hooks";
 
 function toISODate(date) {
     return date.toISOString().slice(0, 10);
@@ -16,6 +17,7 @@ export class AccountReportFilters extends Component {
         onComparison: Function,
         onMonthlyMode: Function,
         onJournals: Function,
+        onPartners: Function,
         onAllEntries: Function,
         onUnfoldAll: Function,
         onConsolidation: Function,
@@ -26,11 +28,14 @@ export class AccountReportFilters extends Component {
     };
 
     setup() {
+        this.orm = useService("orm");
         const dateFilter = this.props.info.options.date_filter || {};
         this.local = useState({
             dateFrom: dateFilter.date_from || "",
             dateTo: dateFilter.date_to || "",
             comparisonNumber: this.props.info.options.comparison.number || 1,
+            partnerSearch: "",
+            partners: [],
         });
     }
 
@@ -79,6 +84,33 @@ export class AccountReportFilters extends Component {
             selected.delete(journal.id);
         }
         this.props.onJournals([...selected]);
+    }
+
+    async searchPartners() {
+        try {
+            this.local.partners = await this.orm.call(
+                "account.report",
+                "hpr_search_partners",
+                [
+                    this.local.partnerSearch || "",
+                    20,
+                    this.options.partners || [],
+                    this.props.info.report.dynamic === "partner_statement",
+                ],
+            );
+        } catch {
+            this.local.partners = [];
+        }
+    }
+
+    onPartnerToggle(partner, ev) {
+        const selected = new Set(this.options.partners || []);
+        if (ev.target.checked) {
+            selected.add(partner.id);
+        } else {
+            selected.delete(partner.id);
+        }
+        this.props.onPartners([...selected]);
     }
 
     dateShortLabel() {

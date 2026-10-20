@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- CASH FLOW STATEMENT (indirect method)                          -->
+    <!-- Sections sum every non-cash account_type exactly once, so      -->
+    <!-- Operating + Investing + Financing == delta of asset_cash.      -->
+    <!-- ============================================================= -->
+    <record id="hpr_cash_flow" model="account.report">
+        <field name="name">Cash Flow Statement</field>
+        <field name="sequence">115</field>
+        <field name="availability_condition">always</field>
+        <field name="default_opening_date_filter">this_year</field>
+        <field name="filter_date_range" eval="True"/>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_show_draft" eval="True"/>
+        <field name="filter_period_comparison" eval="True"/>
+        <field name="filter_journals" eval="True"/>
+        <field name="column_ids">
+            <record id="hpr_cash_flow_column_balance" model="account.report.column">
+                <field name="name">Balance</field>
+                <field name="expression_label">balance</field>
+                <field name="sequence">1</field>
+                <field name="figure_type">monetary</field>
+            </record>
+        </field>
+        <field name="line_ids">
+            <!-- ==================== OPERATING ==================== -->
+            <record id="hpr_cf_operating" model="account.report.line">
+                <field name="name">OPERATING ACTIVITIES</field>
+                <field name="code">hpr_cf_operating</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">10</field>
+                <field name="children_ids">
+                    <record id="hpr_cf_net_profit" model="account.report.line">
+                        <field name="name">Net Profit</field>
+                        <field name="code">hpr_cf_net_profit</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">10</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_net_profit_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', 'in', ('income', 'income_other', 'expense', 'expense_other', 'expense_depreciation', 'expense_direct_cost'))]</field>
+                                <field name="subformula">-sum</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_cf_da" model="account.report.line">
+                        <field name="name">Depreciation and Amortization</field>
+                        <field name="code">hpr_cf_da</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">20</field>
+                        <field name="hide_if_zero" eval="True"/>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_da_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'expense_depreciation')]</field>
+                                <field name="subformula">balance</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_cf_recv" model="account.report.line">
+                        <field name="name">Changes in Receivables</field>
+                        <field name="code">hpr_cf_recv</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">30</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_recv_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'asset_receivable')]</field>
+                                <field name="subformula">-sum</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_cf_inv" model="account.report.line">
+                        <field name="name">Changes in Inventories and Prepayments</field>
+                        <field name="code">hpr_cf_inv</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">40</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_inv_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', 'in', ('asset_current', 'asset_prepayments'))]</field>
+                                <field name="subformula">-sum</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_cf_pay" model="account.report.line">
+                        <field name="name">Changes in Payables and Accrued Liabilities</field>
+                        <field name="code">hpr_cf_pay</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">50</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_pay_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', 'in', ('liability_payable', 'liability_credit_card'))]</field>
+                                <field name="subformula">-sum</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_cf_total_operating" model="account.report.line">
+                        <field name="name">Net Cash from Operating Activities</field>
+                        <field name="code">total_hpr_cf_operating</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">90</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_total_operating_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">hpr_cf_net_profit.balance + hpr_cf_da.balance + hpr_cf_recv.balance + hpr_cf_inv.balance + hpr_cf_pay.balance</field>
+                            </record>
+                        </field>
+                    </record>
+                </field>
+            </record>
+            <!-- ==================== INVESTING ==================== -->
+            <record id="hpr_cf_investing" model="account.report.line">
+                <field name="name">INVESTING ACTIVITIES</field>
+                <field name="code">hpr_cf_investing</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">20</field>
+                <field name="children_ids">
+                    <record id="hpr_cf_fixed" model="account.report.line">
+                        <field name="name">Changes in Fixed Assets</field>
+                        <field name="code">hpr_cf_fixed</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">10</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_fixed_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'asset_fixed')]</field>
+                                <field name="subformula">-sum</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_cf_noncur" model="account.report.line">
+                        <field name="name">Changes in Other Non-current Assets</field>
+                        <field name="code">hpr_cf_noncur</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">20</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_noncur_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'asset_non_current')]</field>
+                                <field name="subformula">-sum</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_cf_total_investing" model="account.report.line">
+                        <field name="name">Net Cash from Investing Activities</field>
+                        <field name="code">total_hpr_cf_investing</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">90</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_total_investing_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">hpr_cf_fixed.balance + hpr_cf_noncur.balance</field>
+                            </record>
+                        </field>
+                    </record>
+                </field>
+            </record>
+            <!-- ==================== FINANCING ==================== -->
+            <record id="hpr_cf_financing" model="account.report.line">
+                <field name="name">FINANCING ACTIVITIES</field>
+                <field name="code">hpr_cf_financing</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">30</field>
+                <field name="children_ids">
+                    <record id="hpr_cf_equity" model="account.report.line">
+                        <field name="name">Changes in Equity</field>
+                        <field name="code">hpr_cf_equity</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">10</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_equity_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', 'in', ('equity', 'equity_unaffected'))]</field>
+                                <field name="subformula">-sum</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_cf_ncl" model="account.report.line">
+                        <field name="name">Changes in Non-current Liabilities</field>
+                        <field name="code">hpr_cf_ncl</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">20</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_ncl_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'liability_non_current')]</field>
+                                <field name="subformula">-sum</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_cf_cl" model="account.report.line">
+                        <field name="name">Changes in Current Liabilities</field>
+                        <field name="code">hpr_cf_cl</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">30</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_cl_dom" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">domain</field>
+                                <field name="formula">[('account_type', '=', 'liability_current')]</field>
+                                <field name="subformula">-sum</field>
+                                <field name="date_scope">strict_range</field>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="hpr_cf_total_financing" model="account.report.line">
+                        <field name="name">Net Cash from Financing Activities</field>
+                        <field name="code">total_hpr_cf_financing</field>
+                        <field name="hierarchy_level">1</field>
+                        <field name="sequence">90</field>
+                        <field name="expression_ids">
+                            <record id="hpr_cf_total_financing_agg" model="account.report.expression">
+                                <field name="label">balance</field>
+                                <field name="engine">aggregation</field>
+                                <field name="formula">hpr_cf_equity.balance + hpr_cf_ncl.balance + hpr_cf_cl.balance</field>
+                            </record>
+                        </field>
+                    </record>
+                </field>
+            </record>
+            <!-- ==================== CASH RECONCILIATION ==================== -->
+            <record id="hpr_cf_net" model="account.report.line">
+                <field name="name">Net Increase (Decrease) in Cash</field>
+                <field name="code">total_hpr_cf_net</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">40</field>
+                <field name="expression_ids">
+                    <record id="hpr_cf_net_agg" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">aggregation</field>
+                        <field name="formula">total_hpr_cf_operating.balance + total_hpr_cf_investing.balance + total_hpr_cf_financing.balance</field>
+                    </record>
+                </field>
+            </record>
+            <record id="hpr_cf_cash_begin" model="account.report.line">
+                <field name="name">Cash and Cash Equivalents, Beginning of Period</field>
+                <field name="code">hpr_cf_cash_begin</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">50</field>
+                <field name="expression_ids">
+                    <record id="hpr_cf_cash_begin_dom" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">domain</field>
+                        <field name="formula">[('account_type', '=', 'asset_cash')]</field>
+                        <field name="subformula">balance</field>
+                        <field name="date_scope">to_beginning_of_period</field>
+                    </record>
+                </field>
+            </record>
+            <record id="hpr_cf_cash_end" model="account.report.line">
+                <field name="name">Cash and Cash Equivalents, End of Period</field>
+                <field name="code">total_hpr_cf_end</field>
+                <field name="hierarchy_level">0</field>
+                <field name="sequence">60</field>
+                <field name="expression_ids">
+                    <record id="hpr_cf_cash_end_agg" model="account.report.expression">
+                        <field name="label">balance</field>
+                        <field name="engine">aggregation</field>
+                        <field name="formula">hpr_cf_cash_begin.balance + total_hpr_cf_net.balance</field>
+                    </record>
+                </field>
+            </record>
+        </field>
+    </record>
+</odoo>

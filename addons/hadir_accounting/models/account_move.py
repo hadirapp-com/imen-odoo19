@@ -9,6 +9,10 @@ class AccountMove(models.Model):
         'account.asset', string='Asset', index=True, copy=False,
         ondelete='restrict', check_company=True,
         help="Depreciation entry generated for this asset/deferred entry.")
+    hadir_asset_disposal = fields.Boolean(
+        string='Asset Disposal Entry', copy=False,
+        help="True on the write-off entry created when the asset is disposed; "
+             "excluded from depreciation schedule computations.")
 
     def button_draft(self):
         linked = self.mapped('hadir_asset_id').filtered(lambda a: a.state in ('running', 'closed'))

@@ -80,6 +80,10 @@ export class AccountReport extends Component {
         return this.applyOptions({ journals });
     }
 
+    onPartners(partners) {
+        return this.applyOptions({ partners });
+    }
+
     onAllEntries(allEntries) {
         return this.applyOptions({ all_entries: allEntries });
     }
