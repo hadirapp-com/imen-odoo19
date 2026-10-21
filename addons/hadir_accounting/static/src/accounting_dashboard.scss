@@ -26,12 +26,20 @@
         gap: 12px;
     }
 
+    // EE accounting dashboard card: white, grey border, purple hover.
     .o_hadir_card {
         background-color: #fff;
-        border: 1px solid rgba(0, 0, 0, 0.08);
+        border: 1px solid #adb5bd;
         border-radius: 8px;
-        padding: 12px 16px;
+        padding: 10px 16px;
+        min-height: 4.5rem;
         cursor: default;
+        transition: border-color 0.15s ease, background-color 0.15s ease;
+
+        &:hover {
+            border-color: #714b67;
+            background-color: #f8f6f7;
+        }
 
         &.o_hadir_card_wide {
             grid-column: span 2;

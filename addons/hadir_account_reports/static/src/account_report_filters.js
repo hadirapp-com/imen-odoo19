@@ -5,7 +5,20 @@ import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 import { useService } from "@web/core/utils/hooks";
 
 function toISODate(date) {
-    return date.toISOString().slice(0, 10);
+    // Local-component formatting: toISOString() shifts the day in UTC+X
+    // timezones (Indonesia is UTC+7) because it renders UTC midnight.
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+function displayDate(iso) {
+    if (!iso) {
+        return "";
+    }
+    const [y, m, d] = iso.split("-");
+    return `${d}/${m}/${y}`;
 }
 
 export class AccountReportFilters extends Component {
@@ -45,6 +58,40 @@ export class AccountReportFilters extends Component {
 
     get filters() {
         return this.props.info.filters || {};
+    }
+
+    get isAsOf() {
+        return this.filters.date_mode === "as_of";
+    }
+
+    applyAsOfPreset(preset) {
+        const today = new Date();
+        let asOf;
+        if (preset === "today") {
+            asOf = today;
+        } else if (preset === "end_this_month") {
+            asOf = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        } else if (preset === "end_last_month") {
+            asOf = new Date(today.getFullYear(), today.getMonth(), 0);
+        } else if (preset === "end_last_quarter") {
+            const quarterStart = new Date(
+                today.getFullYear(), Math.floor(today.getMonth() / 3) * 3, 1);
+            asOf = new Date(quarterStart.getFullYear(),
+                quarterStart.getMonth(), 0);
+        } else { // end_last_year
+            asOf = new Date(today.getFullYear(), 0, 0);
+        }
+        const iso = toISODate(asOf);
+        this.local.dateTo = iso;
+        this.local.dateFrom = iso;
+        this.props.onDateRange(iso, iso);
+    }
+
+    applyCustomAsOf() {
+        if (this.local.dateTo) {
+            this.local.dateFrom = this.local.dateTo;
+            this.props.onDateRange(this.local.dateTo, this.local.dateTo);
+        }
     }
 
     applyPreset(preset) {
@@ -118,9 +165,32 @@ export class AccountReportFilters extends Component {
         if (!df.date_from) {
             return "";
         }
-        if (df.date_from === df.date_to) {
-            return df.date_to;
+        if (this.isAsOf) {
+            return `As of ${displayDate(df.date_to)}`;
         }
-        return `${df.date_from} → ${df.date_to}`;
+        if (df.date_from === df.date_to) {
+            return displayDate(df.date_to);
+        }
+        return `${displayDate(df.date_from)} → ${displayDate(df.date_to)}`;
+    }
+
+    comparisonShortLabel() {
+        const mode = this.options.comparison.mode;
+        const number = this.options.comparison.number || 1;
+        if (this.isAsOf) {
+            return mode === "previous_year" ? `Prev. ${number} Year${number > 1 ? "s" : ""}` : "";
+        }
+        if (mode === "previous_period") {
+            return "Prev. Periods";
+        }
+        if (mode === "previous_year") {
+            return "Prev. Years";
+        }
+        return "";
+    }
+
+    entriesLabel() {
+        const draft = this.options.all_entries ? "All" : "Posted";
+        return `${draft} Entries, Accrual Basis`;
     }
 }

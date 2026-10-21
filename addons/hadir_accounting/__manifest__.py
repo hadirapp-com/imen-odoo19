@@ -24,7 +24,7 @@ Adds the accounting features kept for Enterprise on top of the standard
     'author': 'HadirApp',
     'license': 'LGPL-3',
     'category': 'Accounting/Accounting',
-    'version': '19.0.1.0.3',
+    'version': '19.0.1.0.4',
     'application': True,
     'installable': True,
     'depends': [

@@ -37,111 +37,179 @@
 
     <t t-name="hadir_account_reports.AccountReportFilters" owl="1">
         <div class="hpr-header">
+            <!-- Print -->
+            <button class="hpr-pill btn" t-on-click="() => props.onPrintPdf()">
+                <i class="fa fa-print me-2 text-muted"/>
+                Print
+            </button>
+
             <Dropdown>
-                <t t-set-slot="toggler">
-                    <button class="hpr-report-name btn">
-                        <t t-esc="props.info.report.name"/>
-                        <i class="fa fa-caret-down ms-2 text-muted"/>
-                    </button>
+                <button class="hpr-report-name btn">
+                    <t t-esc="props.info.report.name"/>
+                    <i class="fa fa-gear ms-2 text-muted"/>
+                </button>
+                <t t-set-slot="content">
+                    <DropdownItem t-foreach="props.info.reports_list" t-as="item" t-key="item.report_id"
+                                  onSelected="() => props.onSwitchReport(item)">
+                        <i t-if="item.is_current" class="fa fa-check me-2"/>
+                        <t t-esc="item.name"/>
+                    </DropdownItem>
                 </t>
-                <DropdownItem t-foreach="props.info.reports_list" t-as="item" t-key="item.report_id"
-                              onSelected="() => props.onSwitchReport(item)">
-                    <i t-if="item.is_current" class="fa fa-check me-2"/>
-                    <t t-esc="item.name"/>
-                </DropdownItem>
             </Dropdown>
 
             <div class="hpr-header-filters">
-                <!-- Date -->
+                <!-- Date (range) / As of (balance sheet) -->
                 <Dropdown>
-                    <t t-set-slot="toggler">
-                        <button class="hpr-pill btn">
-                            <i class="fa fa-calendar me-2 text-muted"/>
-                            <t t-esc="dateShortLabel() || 'Date'"/>
-                            <i class="fa fa-caret-down ms-2 text-muted"/>
-                        </button>
-                    </t>
+                    <button class="hpr-pill btn">
+                        <i class="fa fa-calendar me-2 text-muted"/>
+                        <t t-esc="dateShortLabel() || 'Date'"/>
+                        <i class="fa fa-caret-down ms-2 text-muted"/>
+                    </button>
+                    <t t-set-slot="content">
                     <div class="hpr-dropdown-panel">
-                        <button class="dropdown-item" t-on-click="() => this.applyPreset('month')">
-                            This Month
-                        </button>
-                        <button class="dropdown-item" t-on-click="() => this.applyPreset('quarter')">
-                            This Quarter
-                        </button>
-                        <button class="dropdown-item" t-on-click="() => this.applyPreset('year')">
-                            This Year
-                        </button>
-                        <div class="dropdown-divider"/>
-                        <div class="hpr-dropdown-section">
-                            <div class="hpr-dropdown-title">Custom Range</div>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <label class="small text-muted">From</label>
-                                <input type="date" class="form-control form-control-sm" t-model="local.dateFrom"/>
+                        <t t-if="isAsOf">
+                            <button class="dropdown-item" t-on-click="() => this.applyAsOfPreset('today')">
+                                Today
+                            </button>
+                            <button class="dropdown-item" t-on-click="() => this.applyAsOfPreset('end_this_month')">
+                                End of This Month
+                            </button>
+                            <div class="dropdown-divider"/>
+                            <button class="dropdown-item" t-on-click="() => this.applyAsOfPreset('end_last_month')">
+                                End of Last Month
+                            </button>
+                            <button class="dropdown-item" t-on-click="() => this.applyAsOfPreset('end_last_quarter')">
+                                End of Last Quarter
+                            </button>
+                            <button class="dropdown-item" t-on-click="() => this.applyAsOfPreset('end_last_year')">
+                                End of Last Year
+                            </button>
+                            <div class="dropdown-divider"/>
+                            <div class="hpr-dropdown-section">
+                                <div class="hpr-dropdown-title">Custom Date</div>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <label class="small text-muted">As of</label>
+                                    <input type="date" class="form-control form-control-sm" t-model="local.dateTo"/>
+                                </div>
+                                <button class="btn btn-primary btn-sm w-100"
+                                        t-on-click="this.applyCustomAsOf">Apply</button>
                             </div>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <label class="small text-muted">To</label>
-                                <input type="date" class="form-control form-control-sm" t-model="local.dateTo"/>
+                        </t>
+                        <t t-else="">
+                            <button class="dropdown-item" t-on-click="() => this.applyPreset('month')">
+                                This Month
+                            </button>
+                            <button class="dropdown-item" t-on-click="() => this.applyPreset('quarter')">
+                                This Quarter
+                            </button>
+                            <button class="dropdown-item" t-on-click="() => this.applyPreset('year')">
+                                This Year
+                            </button>
+                            <div class="dropdown-divider"/>
+                            <div class="hpr-dropdown-section">
+                                <div class="hpr-dropdown-title">Custom Range</div>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <label class="small text-muted">From</label>
+                                    <input type="date" class="form-control form-control-sm" t-model="local.dateFrom"/>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <label class="small text-muted">To</label>
+                                    <input type="date" class="form-control form-control-sm" t-model="local.dateTo"/>
+                                </div>
+                                <button class="btn btn-primary btn-sm w-100"
+                                        t-on-click="this.applyCustomRange">Apply</button>
                             </div>
-                            <button class="btn btn-primary btn-sm w-100"
-                                    t-on-click="this.applyCustomRange">Apply</button>
-                        </div>
+                        </t>
                     </div>
+                    </t>
                 </Dropdown>
 
                 <!-- Comparison -->
-                <Dropdown t-if="filters.comparison and !options.balance_mode">
-                    <t t-set-slot="toggler">
-                        <button class="hpr-pill btn">
-                            <i class="fa fa-hourglass-half me-2 text-muted"/>
-                            Comparison
-                            <t t-if="options.comparison.mode === 'previous_period'"> · Prev. Periods</t>
-                            <t t-elif="options.comparison.mode === 'previous_year'"> · Prev. Years</t>
-                            <i class="fa fa-caret-down ms-2 text-muted"/>
-                        </button>
-                    </t>
+                <Dropdown t-if="filters.comparison">
+                    <button class="hpr-pill btn">
+                        <i class="fa fa-hourglass-half me-2 text-muted"/>
+                        Comparison
+                        <t t-if="comparisonShortLabel()" t-esc="' · ' + comparisonShortLabel()"/>
+                        <i class="fa fa-caret-down ms-2 text-muted"/>
+                    </button>
+                    <t t-set-slot="content">
                     <div class="hpr-dropdown-panel">
                         <button class="dropdown-item d-flex align-items-center"
                                 t-att-class="{active: options.comparison.mode === 'none'}"
                                 t-on-click="() => this.setComparison('none')">
                             No Comparison
                         </button>
-                        <div class="dropdown-divider"/>
-                        <div class="hpr-dropdown-section">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <span class="small flex-grow-1">Previous Periods</span>
-                                <input type="number" min="1" max="12" class="form-control form-control-sm hpr-number-input"
-                                       t-model="local.comparisonNumber"/>
-                                <button class="btn btn-secondary btn-sm"
-                                        t-on-click="() => this.setComparison('previous_period')">Apply</button>
+                        <t t-if="isAsOf">
+                            <div class="dropdown-divider"/>
+                            <div class="hpr-dropdown-section">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="small flex-grow-1">Previous Years</span>
+                                    <input type="number" min="1" max="12" class="form-control form-control-sm hpr-number-input"
+                                           t-model="local.comparisonNumber"/>
+                                    <button class="btn btn-secondary btn-sm"
+                                            t-on-click="() => this.setComparison('previous_year')">Apply</button>
+                                </div>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="small flex-grow-1">Same Period Last Year</span>
-                                <input type="number" min="1" max="12" class="form-control form-control-sm hpr-number-input"
-                                       t-model="local.comparisonNumber"/>
-                                <button class="btn btn-secondary btn-sm"
-                                        t-on-click="() => this.setComparison('previous_year')">Apply</button>
+                        </t>
+                        <t t-else="">
+                            <div class="dropdown-divider"/>
+                            <div class="hpr-dropdown-section">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="small flex-grow-1">Previous Periods</span>
+                                    <input type="number" min="1" max="12" class="form-control form-control-sm hpr-number-input"
+                                           t-model="local.comparisonNumber"/>
+                                    <button class="btn btn-secondary btn-sm"
+                                            t-on-click="() => this.setComparison('previous_period')">Apply</button>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="small flex-grow-1">Same Period Last Year</span>
+                                    <input type="number" min="1" max="12" class="form-control form-control-sm hpr-number-input"
+                                           t-model="local.comparisonNumber"/>
+                                    <button class="btn btn-secondary btn-sm"
+                                            t-on-click="() => this.setComparison('previous_year')">Apply</button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="dropdown-divider"/>
+                            <div class="dropdown-divider"/>
+                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                <input type="checkbox"
+                                       t-att-checked="options.monthly_mode"
+                                       t-on-change="(ev) => props.onMonthlyMode(ev.target.checked)"/>
+                                Monthly Columns
+                            </label>
+                        </t>
+                    </div>
+                    </t>
+                </Dropdown>
+
+                <!-- Entries -->
+                <Dropdown t-if="filters.show_draft">
+                    <button class="hpr-pill btn">
+                        <i class="fa fa-filter me-2 text-muted"/>
+                        <t t-esc="entriesLabel()"/>
+                        <i class="fa fa-caret-down ms-2 text-muted"/>
+                    </button>
+                    <t t-set-slot="content">
+                    <div class="hpr-dropdown-panel">
+                        <div class="hpr-dropdown-title">Basis: Accrual</div>
                         <label class="dropdown-item d-flex align-items-center gap-2">
                             <input type="checkbox"
-                                   t-att-checked="options.monthly_mode"
-                                   t-on-change="(ev) => props.onMonthlyMode(ev.target.checked)"/>
-                            Monthly Columns
+                                   t-att-checked="options.all_entries"
+                                   t-on-change="(ev) => props.onAllEntries(ev.target.checked)"/>
+                            Draft Entries
                         </label>
                     </div>
+                    </t>
                 </Dropdown>
 
                 <!-- Journals -->
                 <Dropdown t-if="filters.journals">
-                    <t t-set-slot="toggler">
-                        <button class="hpr-pill btn">
-                            <i class="fa fa-book me-2 text-muted"/>
-                            Journals
-                            <t t-if="options.journals.length" t-esc="' (' + options.journals.length + ')'"/>
-                            <i class="fa fa-caret-down ms-2 text-muted"/>
-                        </button>
-                    </t>
+                    <button class="hpr-pill btn">
+                        <i class="fa fa-book me-2 text-muted"/>
+                        Journals
+                        <t t-if="options.journals.length" t-esc="' (' + options.journals.length + ')'"/>
+                        <i class="fa fa-caret-down ms-2 text-muted"/>
+                    </button>
+                    <t t-set-slot="content">
                     <div class="hpr-dropdown-panel hpr-dropdown-panel--scroll">
                         <button t-if="options.journals.length"
                                 class="dropdown-item text-muted small"
@@ -158,18 +226,18 @@
                             <t t-esc="journal.name"/>
                         </label>
                     </div>
+                    </t>
                 </Dropdown>
 
                 <!-- Partners -->
                 <Dropdown t-if="filters.partner" beforeOpen="() => this.searchPartners()">
-                    <t t-set-slot="toggler">
-                        <button class="hpr-pill btn">
-                            <i class="fa fa-users me-2 text-muted"/>
-                            Partners
-                            <t t-if="options.partners.length" t-esc="' (' + options.partners.length + ')'"/>
-                            <i class="fa fa-caret-down ms-2 text-muted"/>
-                        </button>
-                    </t>
+                    <button class="hpr-pill btn">
+                        <i class="fa fa-users me-2 text-muted"/>
+                        Partners
+                        <t t-if="options.partners.length" t-esc="' (' + options.partners.length + ')'"/>
+                        <i class="fa fa-caret-down ms-2 text-muted"/>
+                    </button>
+                    <t t-set-slot="content">
                     <div class="hpr-dropdown-panel hpr-dropdown-panel--scroll">
                         <input type="text" class="form-control form-control-sm m-2"
                                placeholder="Search partner..."
@@ -192,26 +260,18 @@
                             No partners found
                         </div>
                     </div>
+                    </t>
                 </Dropdown>
 
                 <!-- Options -->
                 <Dropdown>
-                    <t t-set-slot="toggler">
-                        <button class="hpr-pill btn">
-                            <i class="fa fa-gear me-2 text-muted"/>
-                            Options
-                            <i class="fa fa-caret-down ms-2 text-muted"/>
-                        </button>
-                    </t>
+                    <button class="hpr-pill btn">
+                        <i class="fa fa-gear me-2 text-muted"/>
+                        Options
+                        <i class="fa fa-caret-down ms-2 text-muted"/>
+                    </button>
+                    <t t-set-slot="content">
                     <div class="hpr-dropdown-panel">
-                        <div class="hpr-dropdown-title">General</div>
-                        <label t-if="filters.show_draft"
-                               class="dropdown-item d-flex align-items-center gap-2">
-                            <input type="checkbox"
-                                   t-att-checked="options.all_entries"
-                                   t-on-change="(ev) => props.onAllEntries(ev.target.checked)"/>
-                            Draft Entries
-                        </label>
                         <label t-if="filters.unfold_all"
                                class="dropdown-item d-flex align-items-center gap-2">
                             <input type="checkbox"
@@ -220,7 +280,7 @@
                             Unfold All
                         </label>
                         <t t-if="filters.consolidation and filters.consolidation.available">
-                            <div class="dropdown-divider"/>
+                            <div class="dropdown-divider" t-if="filters.unfold_all"/>
                             <div class="hpr-dropdown-title">Consolidation</div>
                             <label class="dropdown-item d-flex align-items-center gap-2">
                                 <input type="checkbox"
@@ -238,17 +298,20 @@
                             </label>
                         </t>
                     </div>
+                    </t>
                 </Dropdown>
 
-                <!-- Print / Export -->
+                <!-- Currency -->
+                <span t-if="props.info.currency" class="hpr-pill hpr-pill--static">
+                    <i class="fa fa-money me-2 text-muted"/>
+                    In: <t t-esc="props.info.currency"/>
+                </span>
+
+                <!-- Export -->
                 <div class="hpr-header-actions ms-auto">
-                    <button class="hpr-pill btn" t-on-click="() => props.onPrintPdf()">
-                        <i class="fa fa-print me-2 text-muted"/>
-                        Print (PDF)
-                    </button>
                     <button class="hpr-pill btn" t-on-click="() => props.onExportXlsx()">
                         <i class="fa fa-download me-2 text-muted"/>
-                        Export (XLSX)
+                        XLSX
                     </button>
                 </div>
             </div>
@@ -256,12 +319,10 @@
     </t>
 
     <t t-name="hadir_account_reports.AccountReportTable" owl="1">
-        <table class="hpr-table">
+        <table class="hpr-table" t-att-class="{ 'hpr-table--noperiod': !showPeriodRow }">
             <thead>
-                <tr class="hpr-thead-periods">
-                    <th class="hpr-thead-name hpr-thead-corner">
-                        <span t-if="props.info.currency" class="text-muted small">in <t t-esc="props.info.currency"/></span>
-                    </th>
+                <tr t-if="showPeriodRow" class="hpr-thead-periods">
+                    <th class="hpr-thead-name hpr-thead-corner"/>
                     <t t-foreach="headerGroups" t-as="group" t-key="group_index">
                         <th t-att-colspan="group.span" class="text-center hpr-period-label">
                             <t t-esc="group.label"/>

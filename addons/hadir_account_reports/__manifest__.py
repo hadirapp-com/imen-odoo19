@@ -21,7 +21,7 @@ community `account`) and adds what Enterprise keeps for itself:
     'author': 'HadirApp',
     'license': 'LGPL-3',
     'category': 'Accounting/Accounting',
-    'version': '19.0.4.0.1',
+    'version': '19.0.5.2.1',
     'application': False,
     'installable': True,
     'post_init_hook': 'post_init_hook',

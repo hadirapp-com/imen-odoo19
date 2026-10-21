@@ -6,15 +6,35 @@
 // (so it can wrap/grow without ever overlapping the table) and .hpr-content
 // owns the scrolling, which also keeps the sticky table headers independent
 // of the toolbar height.
+//
+// Colors are pinned to the light EE scheme and the text color is set
+// explicitly, so the report stays readable no matter what scheme the OS or
+// the surrounding webclient uses.
 
 .hpr-report {
     --hpr-periodrow-h: 30px;
+    --hpr-bg: #fff;
+    --hpr-text: #0b1c33;
+    --hpr-bg-hover: #f2f2f2;
+    --hpr-bg-active: #e8e8e8;
     --hpr-border: #d9d9d9;
     --hpr-border-strong: #666;
+    --hpr-muted: #7c7c7c;
+    --hpr-muted-2: #8f8f8f;
+    --hpr-aml: #6b6b6b;
+    --hpr-title-bg: rgba(0, 0, 0, 0.045);
+    --hpr-hover-row: rgba(0, 0, 0, 0.035);
+    --hpr-negative: #d13438;
+    --hpr-block-border: #e4e4e4;
+    --hpr-alt-bg: rgba(0, 0, 0, 0.025);
+    --hpr-shadow: rgba(0, 0, 0, 0.12);
+    --hpr-toolbar-shadow: rgba(0, 0, 0, 0.04);
 
     display: flex;
     flex-direction: column;
     height: 100%;
+    background-color: var(--hpr-bg);
+    color: var(--hpr-text);
 
     .hpr-loading {
         flex: 1 1 auto;
@@ -40,9 +60,9 @@
         gap: 8px 12px;
         min-height: 49px;
         padding: 8px 16px;
-        background-color: #fff;
+        background-color: var(--hpr-bg);
         border-bottom: 1px solid var(--hpr-border);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 1px 2px var(--hpr-toolbar-shadow);
     }
 
     .hpr-report-name {
@@ -51,9 +71,10 @@
         line-height: 20px;
         color: inherit;
         padding: 5px 10px;
+        border-radius: 8px;
 
         &:hover {
-            background-color: rgba(0, 0, 0, 0.04);
+            background-color: var(--hpr-bg-hover);
         }
     }
 
@@ -68,8 +89,8 @@
 
     .hpr-pill {
         border: 1px solid var(--hpr-border);
-        background-color: #fff;
-        border-radius: 6px;
+        background-color: var(--hpr-bg);
+        border-radius: 8px;
         padding: 5px 12px;
         line-height: 20px;
         font-size: 13px;
@@ -77,11 +98,20 @@
         white-space: nowrap;
 
         &:hover {
-            background-color: #f2f2f2;
+            background-color: var(--hpr-bg-hover);
         }
 
         &:active {
-            background-color: #e8e8e8;
+            background-color: var(--hpr-bg-active);
+        }
+    }
+
+    .hpr-pill--static {
+        cursor: default;
+        color: var(--hpr-muted);
+
+        &:hover, &:active {
+            background-color: var(--hpr-bg);
         }
     }
 
@@ -90,40 +120,6 @@
         align-items: center;
         gap: 8px;
         margin-left: auto;
-    }
-
-    // Dropdown panels
-    .hpr-dropdown-panel {
-        min-width: 280px;
-        padding: 4px 0;
-        border-radius: 8px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-
-        &.hpr-dropdown-panel--scroll {
-            max-height: 340px;
-            overflow-y: auto;
-        }
-    }
-
-    .hpr-dropdown-title {
-        padding: 6px 16px 2px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        color: #8f8f8f;
-    }
-
-    .hpr-dropdown-section {
-        padding: 4px 16px;
-    }
-
-    .dropdown-item.active {
-        background-color: rgba(0, 0, 0, 0.05);
-    }
-
-    .hpr-number-input {
-        width: 64px;
     }
 
     // ------------------------------------------------------------------
@@ -146,7 +142,7 @@
             th {
                 position: sticky;
                 z-index: 10;
-                background-color: #fff;
+                background-color: var(--hpr-bg);
                 border: none;
                 border-bottom: 1px solid var(--hpr-border);
             }
@@ -167,15 +163,20 @@
                 padding: 3px 8px 6px;
                 font-weight: 400;
                 font-size: 12px;
-                color: #7c7c7c;
+                color: var(--hpr-muted);
                 border-bottom: 1px solid var(--hpr-border-strong);
             }
+        }
+
+        // Period row hidden (single column): the column row sticks to the top.
+        &.hpr-table--noperiod thead th {
+            top: 0;
         }
 
         tbody {
             tr {
                 &:hover:not(.hpr-row--title) {
-                    background-color: rgba(0, 0, 0, 0.035);
+                    background-color: var(--hpr-hover-row);
                 }
 
                 &.hpr-row--clickable {
@@ -185,6 +186,16 @@
                 &.hpr-row--title td {
                     font-weight: 600;
                     padding-top: 10px;
+                    padding-bottom: 10px;
+                    background-color: var(--hpr-title-bg);
+                }
+
+                &.hpr-row--title td:first-child {
+                    border-radius: 6px 0 0 6px;
+                }
+
+                &.hpr-row--title td:last-child {
+                    border-radius: 0 6px 6px 0;
                 }
 
                 &.hpr-row--total td {
@@ -194,7 +205,7 @@
 
                 &.hpr-row--aml td {
                     font-size: 12px;
-                    color: #6b6b6b;
+                    color: var(--hpr-aml);
                 }
             }
 
@@ -206,7 +217,7 @@
         }
 
         .hpr-block-start {
-            border-left: 1px solid #e4e4e4;
+            border-left: 1px solid var(--hpr-block-border);
         }
 
         .hpr-thead-corner {
@@ -222,11 +233,16 @@
             white-space: nowrap;
         }
 
+        tr.hpr-row--clickable:hover .hpr-cell--name {
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
         .hpr-fold-icon {
             display: inline-block;
             width: 14px;
             margin-right: 6px;
-            color: #8f8f8f;
+            color: var(--hpr-muted-2);
             font-size: 12px;
         }
 
@@ -234,10 +250,63 @@
             text-align: right;
             white-space: nowrap;
             font-variant-numeric: tabular-nums;
+            padding-right: calc(20px + 0.75rem);
+
+            &.hpr-cell--alt {
+                background-color: var(--hpr-alt-bg);
+            }
 
             &.hpr-cell--negative {
-                color: #d13438;
+                color: var(--hpr-negative);
             }
         }
     }
+}
+
+// ------------------------------------------------------------------
+// Dropdown panels
+//
+// Popovers render in a body-level overlay, OUTSIDE .hpr-report, so
+// these styles are global and re-declare the variables they need
+// (the --hpr-* custom properties set on .hpr-report don't inherit).
+// ------------------------------------------------------------------
+
+.hpr-dropdown-panel {
+    --hpr-border: #d9d9d9;
+    --hpr-muted-2: #8f8f8f;
+    --hpr-hover-row: rgba(0, 0, 0, 0.035);
+    --hpr-shadow: rgba(0, 0, 0, 0.12);
+
+    min-width: 280px;
+    padding: 4px 0;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #0b1c33;
+    box-shadow: 0 6px 18px var(--hpr-shadow);
+
+    &.hpr-dropdown-panel--scroll {
+        max-height: 340px;
+        overflow-y: auto;
+    }
+
+    .dropdown-item.active {
+        background-color: var(--hpr-hover-row);
+    }
+}
+
+.hpr-dropdown-title {
+    padding: 6px 16px 2px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--hpr-muted-2);
+}
+
+.hpr-dropdown-section {
+    padding: 4px 16px;
+}
+
+.hpr-number-input {
+    width: 64px;
 }

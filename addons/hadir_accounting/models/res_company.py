@@ -105,7 +105,16 @@ class ResCompany(models.Model):
         asset_groups = self.env['account.asset']._read_group(
             [('state', '=', 'running'), ('company_id', '=', company.id)],
             ['asset_type'], ['book_value:sum', 'original_value:sum', '__count'])
-        assets = {'fixed': {}, 'deferred_revenue': {}}
+
+        def asset_stub():
+            return {
+                'count': 0,
+                'book_value': 0.0,
+                'original_value': 0.0,
+                'book_value_formatted': formatLang(self.env, 0.0, currency_obj=company.currency_id),
+            }
+
+        assets = {'fixed': asset_stub(), 'deferred_revenue': asset_stub()}
         for asset_type, book, original, count in asset_groups:
             key = 'deferred_revenue' if asset_type == 'sale' else 'fixed'
             assets[key] = {

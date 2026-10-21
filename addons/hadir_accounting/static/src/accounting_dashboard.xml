@@ -7,7 +7,9 @@
                 <i class="fa fa-spinner fa-spin fa-3x" role="img" aria-label="Loading"/>
             </div>
             <div t-elif="state.error" class="alert alert-danger">
-                Failed to load dashboard data. <button class="btn btn-link" t-on-click="load">Retry</button>
+                Failed to load dashboard data.
+                <div class="small" t-esc="state.error?.data?.message || state.error?.message || state.error"/>
+                <button class="btn btn-link" t-on-click="load">Retry</button>
             </div>
             <t t-elif="state.data">
                 <div class="o_hadir_dashboard_header">

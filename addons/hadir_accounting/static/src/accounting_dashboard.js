@@ -17,7 +17,9 @@ export class AccountingDashboard extends Component {
     async load() {
         this.state.loading = true;
         try {
-            this.state.data = await this.orm.call("res.company", "hadir_dashboard_data", [[]]);
+            // hadir_dashboard_data is @api.model: args are forwarded as-is,
+            // so pass [] — wrapping it as [[]] lands an extra positional arg.
+            this.state.data = await this.orm.call("res.company", "hadir_dashboard_data", []);
             this.state.error = null;
         } catch (error) {
             this.state.error = error;

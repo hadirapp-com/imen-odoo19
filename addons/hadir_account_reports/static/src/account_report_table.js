@@ -22,6 +22,10 @@ export class AccountReportTable extends Component {
         return groups;
     }
 
+    get showPeriodRow() {
+        return this.props.info.columns.length > 1;
+    }
+
     isBlockStart(index) {
         return this.headerGroups.some((group) => group.start === index);
     }

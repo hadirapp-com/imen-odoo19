@@ -63,35 +63,36 @@ def setup_actions_and_menus(env):
             _ensure_xmlid(env, 'ir.actions.client', xmlid, action.id)
         created_actions[xmlid] = action
 
-    # 2. Menus under Accounting > Reporting
+    # 2. Single menu under Accounting > Reporting. One entry opens the engine
+    #    (Balance Sheet); the report picker dropdown in the toolbar covers the
+    #    remaining reports, so per-report menus are redundant.
     parent = env.ref('account.menu_finance_reports', raise_if_not_found=False)
     if parent:
+        action = created_actions.get('action_hpr_balance_sheet')
         section = env.ref('hadir_account_reports.menu_hpr_reports', raise_if_not_found=False)
         if not section:
             section = env['ir.ui.menu'].create({
                 'name': 'Financial Reports',
                 'parent_id': parent.id,
                 'sequence': 2,
+                'action': action,
                 'group_ids': [(6, 0, [env.ref('account.group_account_readonly').id])],
             })
             _ensure_xmlid(env, 'ir.ui.menu', 'menu_hpr_reports', section.id)
-        for xmlid, _r, name, sequence in ACTIONS_SPEC:
-            action = created_actions.get(xmlid)
-            if not action:
-                continue
-            menu_xmlid = 'menu_' + xmlid.replace('action_', '')
-            menu = env.ref(f'hadir_account_reports.{menu_xmlid}', raise_if_not_found=False)
+        elif section.action != action:
+            section.write({'action': action})
+        Imd = env['ir.model.data']
+        stale = Imd.sudo().search([
+            ('module', '=', 'hadir_account_reports'),
+            ('model', '=', 'ir.ui.menu'),
+            ('name', 'in', ['menu_' + xmlid.replace('action_', '')
+                            for xmlid, _r, _n, _s in ACTIONS_SPEC]),
+        ])
+        for imd in stale:
+            menu = env['ir.ui.menu'].browse(imd.res_id).exists()
+            imd.unlink()
             if menu:
-                menu.write({'name': name, 'sequence': sequence, 'action': action})
-            else:
-                menu = env['ir.ui.menu'].create({
-                    'name': name,
-                    'parent_id': section.id,
-                    'sequence': sequence,
-                    'action': action,
-                    'group_ids': [(6, 0, [env.ref('account.group_account_readonly').id])],
-                })
-                _ensure_xmlid(env, 'ir.ui.menu', menu_xmlid, menu.id)
+                menu.unlink()
 
     # 3. Partner picker visibility on partner-centric reports (re-asserted
     #    here because core recomputes option flags from action existence).

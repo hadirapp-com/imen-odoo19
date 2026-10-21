@@ -53,6 +53,7 @@ class AccountReport(models.Model):
             'currency': hq.currency_id.name,
             'filters': {
                 'comparison': report.filter_period_comparison,
+                'date_mode': 'as_of' if options.get('date_mode') == 'as_of' else 'range',
                 'journals': report.filter_journals,
                 'show_draft': report.filter_show_draft,
                 'unfold_all': report.filter_unfold_all,
@@ -117,6 +118,12 @@ class AccountReport(models.Model):
 
         if self._hpr_is_balance_sheet():
             options['balance_mode'] = True
+            options['date_mode'] = 'as_of'
+            options['monthly_mode'] = False
+            # Every balance-sheet expression is cumulative (date_scope
+            # from_beginning), so values depend on date_to only; collapsing
+            # date_from onto it yields the EE "As of" single-date semantics.
+            date_filter['date_from'] = date_filter['date_to']
 
         # Consolidation scope is ALWAYS recomputed server-side: the client
         # cannot forge company_ids. Active only for head offices on plain
@@ -751,9 +758,12 @@ class AccountReport(models.Model):
 
         def cells_from(original, fn_monthly, accumulated, book):
             cells = [self._hpr_format_cell(original, original_col, currency)]
-            cells += [self._hpr_format_cell(fn_monthly(m.strftime('%Y-%m')),
-                                            col, currency)
-                      for m, col in zip(months, monthly_cols)]
+            for i, (m, col) in enumerate(zip(months, monthly_cols)):
+                cell = self._hpr_format_cell(fn_monthly(m.strftime('%Y-%m')), col, currency)
+                if i % 2 == 1:
+                    # EE Depreciation Schedule shades alternating month columns
+                    cell['classes'] = (cell['classes'] + ' hpr-cell--alt').strip()
+                cells.append(cell)
             cells.append(self._hpr_format_cell(accumulated, accumulated_col, currency))
             cells.append(self._hpr_format_cell(book, book_col, currency))
             return cells
